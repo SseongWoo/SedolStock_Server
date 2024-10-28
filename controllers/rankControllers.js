@@ -3,7 +3,7 @@ import { db } from '../firebase_admin.js';
 import { getDate } from '../utils/date.js';
 
 // 랭킹 데이터 갱신
-export async function setRankData(req, res) {
+export async function setRankData() {
     try {
         // Firestore에서 'users' 컬렉션을 'totalmoney' 내림차순으로 정렬하고 최대 100개 제한
         const usersSnapshot = await db.collection('users')
@@ -47,11 +47,9 @@ export async function setRankData(req, res) {
         const rankListDocRef = db.collection('rank').doc(getDate());
         await rankListDocRef.set({ users: userList });
 
-        // 사용자 데이터 반환
-        res.status(200).json({ users: userList });
+        console.log('setRankData');
     } catch (error) {
         console.error('Error fetching top users:', error);
-        res.status(500).json({ message: 'Failed to fetch top users', error: error.message });
     }
 }
 

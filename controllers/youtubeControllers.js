@@ -49,7 +49,7 @@ export async function getChannelIdByName(req, res) {
 }
 
 // 채널 정보를 가져오고 Firestore에 저장하는 함수
-export async function updateChannelInfoData(req, res) {
+export async function updateChannelInfoData() {
     const channelBirthDay = [
         '12.21', '11.15', '12.02', '05.21', '09.07', '02.22',
         '01.05', '10.01', '05.03', '03.21', '08.07', '04.13'
@@ -114,14 +114,12 @@ export async function updateChannelInfoData(req, res) {
         await db.collection('youtubechannels').doc('0').set(channelDataObject);
 
         // 응답 전송
-        return res.status(200).json({
-            message: 'Channel information has been saved successfully.',
-            channelDataList
-        });
+        console.log('Channel information has been saved successfully.');
+        return;
 
     } catch (error) {
         console.error('Error fetching channel information:', error);
-        return res.status(500).json({ message: 'Error fetching channel information', error: error.message });
+        return;
     }
 }
 
@@ -149,7 +147,7 @@ export async function getChannelInfoData(req, res) {
     }
 }
 
-export async function updateVideoData(req, res) {
+export async function updateVideoData() {
     try {
         // 각 채널에 대해 비디오 데이터 가져오기
         const videoPromises = channelIdList.map(async (channelId) => {
@@ -203,13 +201,12 @@ export async function updateVideoData(req, res) {
         await Promise.all(videoPromises);
 
         // 응답 전송
-        return res.status(200).json({
-            message: 'Latest 10 videos for each channel have been saved successfully.'
-        });
+        console.log('Latest 10 videos for each channel have been saved successfully.');
+        return;
 
     } catch (error) {
         console.error('Error saving latest videos:', error);
-        return res.status(500).json({ message: 'Error saving latest videos', error: error.message });
+        return;
     }
 }
 
@@ -237,7 +234,7 @@ export async function getVideoData(req, res) {
     }
 }
 
-export async function updateLiveData(req, res) {
+export async function updateLiveData() {
     try {
         const lastDoc = await db.collection('youtubelivedata').doc('0').get();
         const countMapData = lastDoc.data() || {};
@@ -247,7 +244,8 @@ export async function updateLiveData(req, res) {
 
         const doc = await db.collection('youtubevideos').doc('0').get();
         if (!doc.exists) {
-            return res.status(404).json({ message: 'No data found in Firestore for document "0"' });
+            console.error('message: No data found in Firestore for document "0"');
+            return;
         }
 
         const channelDataObject = doc.data();
@@ -343,14 +341,12 @@ export async function updateLiveData(req, res) {
         await db.collection('youtubelivedata').doc('0').set(countMap, { merge: true });
         await db.collection('youtubelivedata').doc('history').collection(getDate()).doc(getTime()).set(countMap);
 
-        return res.status(200).json({
-            message: 'All video IDs grouped by channel ID retrieved successfully.',
-            videosByChannel: videoIdsByChannel
-        });
+        console.log('message: All video IDs grouped by channel ID retrieved successfully.');
+        return
 
     } catch (error) {
         console.error('Error retrieving video IDs by channel ID:', error);
-        return res.status(500).json({ message: 'Error retrieving video IDs by channel ID', error: error.message });
+        return;
     }
 }
 
@@ -412,7 +408,7 @@ export async function testFunction(req, res) {
     }
 }
 
-export async function updateLatestVideoInfo(req, res) {
+export async function updateLatestVideoInfo() {
     // 모든 채널의 최신 비디오 정보를 저장할 Map 객체 생성
     const videoInfoMap = new Map();
 
@@ -477,17 +473,11 @@ export async function updateLatestVideoInfo(req, res) {
 
         console.log("All channel video information saved successfully.");
         // 성공적으로 저장되었을 때 응답
-        return res.status(200).json({
-            message: "All channel video information saved successfully.",
-            data: videoInfoObject
-        });
+        return;
 
     } catch (err) {
         console.error("Error saving video information to Firestore:", err);
-        return res.status(500).json({
-            message: "Error saving video information to Firestore.",
-            error: err.message
-        });
+        return;
     }
 }
 
