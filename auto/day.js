@@ -1,5 +1,5 @@
-import { setRankData } from '../controllers/rankControllers';
-import { updateLatestVideoInfo, updateVideoData } from '../controllers/youtubeControllers'
+import { setRankData } from '../controllers/rankControllers.js';
+import { updateLatestVideoInfo, updateVideoData } from '../controllers/youtubeControllers.js'
 
 
 // 랭킹 업데이트
