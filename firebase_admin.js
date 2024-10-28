@@ -3,7 +3,7 @@ import fs from 'fs';
 
 // JSON 파일을 CommonJS 방식으로 읽어오기
 const serviceAccount = JSON.parse(
-    fs.readFileSync(new URL('/Users/joseong-u/Documents/key/stockprojecttest-10805-firebase-adminsdk-zxjew-e40a0b9e60.json', import.meta.url))
+    fs.readFileSync(new URL('./stockprojecttest-10805-firebase-adminsdk-zxjew-e40a0b9e60.json', import.meta.url))
 );
 
 // Firebase Admin 초기화
