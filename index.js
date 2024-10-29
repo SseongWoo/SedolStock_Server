@@ -44,7 +44,7 @@ apiRouter.get('/names/:name', searchName);
 //apiRouter.post('/users/setprofile/:uid', setUserProfile);
 
 // 사용자 이름 업데이트 (PUT /names/:name)
-apiRouter.put('/names/:name', updateName);
+apiRouter.put('/names/update', updateName);
 
 // 사용자 데이터 삭제 (DELETE /users/:id)
 apiRouter.delete('/users/:id', deleteUser);
