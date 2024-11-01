@@ -1,6 +1,7 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, getAuth, sendPasswordResetEmail, updatePassword, sendEmailVerification, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { auth, firebaseConfig } from '../firebase.js';
 import { admin, db } from '../firebase_admin.js';
+import { getDate } from '../utils/date.js'
 import axios from 'axios';
 
 
@@ -117,17 +118,45 @@ export async function checkEmail(req, res) {
 }
 
 export async function deleteUserAuth(req, res) {
-    const { uid } = req.params;
+    const { uid, name } = req.body;
 
     try {
-        // Firebase Authentication에서 유저 삭제
-        await admin.auth().deleteUser(uid);
+        const nameDocRef = db.collection('delete').doc(getDate());
 
-        // Firestore에서 해당 유저의 데이터 삭제
-        const userDocRef = db.collection('users').doc(uid);
-        await userDocRef.delete();
+        // 해당 문서가 존재하는지 확인
+        const nameDocSnap = await nameDocRef.get();
 
-        res.status(200).json({ message: `User with UID ${uid} deleted successfully from Authentication` });
+        if (nameDocSnap.exists) {
+            await admin.auth().deleteUser(uid);
+
+            // 문서가 존재할 경우 데이터 가져오기
+            let uidList = nameDocSnap.data().uidlist || [];
+            let nameList = nameDocSnap.data().namelist || []; // namelist 추가
+
+            // `uid`가 리스트에 없으면 추가
+            if (!uidList.includes(uid)) {
+                uidList.push(uid);
+            }
+
+            // `name`이 리스트에 없으면 추가
+            if (!nameList.includes(name)) {
+                nameList.push(name);
+            }
+
+            // Firestore에 리스트 업데이트
+            await nameDocRef.update({
+                uidlist: uidList,
+                namelist: nameList, // namelist 업데이트
+            });
+        } else {
+            // 문서가 존재하지 않을 경우 새로 생성
+            await nameDocRef.set({
+                uidlist: [uid],
+                namelist: [name], // namelist 생성
+            });
+        }
+
+        res.status(200).json({ message: `User with UID ${uid} and name ${name} deleted successfully from Authentication` });
     } catch (error) {
         console.error('Error deleting user from Authentication:', error);
         res.status(500).json({ message: 'Failed to delete user from Authentication', error: error.message });
@@ -197,5 +226,91 @@ async function getIdToken(refreshToken) {
     } catch (error) {
         console.error('Failed to refresh token:', error.response?.data || error.message);
         throw new Error('Failed to refresh token');
+    }
+}
+
+export async function startDeleteUserData() {
+    try {
+        // 일주일 전의 날짜 계산
+        const date = new Date();
+        date.setDate(date.getDate() - 7);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const oneWeekAgoDate = `${year}-${month}-${day}`;
+
+        // 일주일 전의 'delete' 컬렉션의 문서를 참조
+        const userDocRef = db.collection('delete').doc(oneWeekAgoDate); // 일주일 전의 날짜 사용
+        const userDocSnap = await userDocRef.get();
+
+        // 문서가 존재하는지 확인
+        if (!userDocSnap.exists) {
+            console.log(`No delete data found for date: ${oneWeekAgoDate}`);
+            return;
+        }
+
+        // 문서에서 'uidlist'와 'nameList' 필드 값 가져오기
+        const uidList = userDocSnap.data().uidlist || [];
+        const nameList = userDocSnap.data().nameList || [];
+
+        // 'uidlist'가 있을 때만 처리
+        if (uidList.length > 0) {
+            // 각 uid에 대해 삭제 처리
+            for (const uid of uidList) {
+                try {
+                    // 'trade'와 'wallet' 컬렉션의 하위 문서 삭제
+                    await deleteSubcollection(db.collection('users').doc(uid).collection('trade'));
+                    await deleteSubcollection(db.collection('users').doc(uid).collection('wallet'));
+                    await db.collection('users').doc(uid).delete();
+                    console.log(`User document and subcollections for UID: ${uid} deleted successfully.`);
+                } catch (error) {
+                    console.error(`Error deleting user document and subcollections for UID: ${uid}:`, error);
+                }
+            }
+        }
+
+        // 'nameList'가 있을 때만 처리
+        if (nameList.length > 0) {
+            // 각 name에 대해 삭제 처리
+            for (const name of nameList) {
+                try {
+                    const nameDocRef = db.collection('names').doc(name);
+                    await nameDocRef.delete();
+                    console.log(`Name document for name: ${name} deleted successfully.`);
+                } catch (error) {
+                    console.error(`Error deleting name document for name: ${name}:`, error);
+                }
+            }
+        }
+
+        // 'delete' 컬렉션의 해당 문서 삭제
+        await userDocRef.delete();
+        console.log(`Old delete data for date: ${oneWeekAgoDate} deleted successfully.`);
+    } catch (error) {
+        console.error(`Error deleting old user data for date ${oneWeekAgoDate}:`, error);
+    }
+}
+
+async function deleteQueryBatch(db, query, resolve, reject) {
+    try {
+        const snapshot = await query.get();
+
+        if (snapshot.size === 0) {
+            resolve();
+            return;
+        }
+
+        const batch = db.batch();
+        snapshot.docs.forEach((doc) => {
+            batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+
+        process.nextTick(() => {
+            deleteQueryBatch(db, query, resolve, reject);
+        });
+    } catch (error) {
+        reject(error);
     }
 }

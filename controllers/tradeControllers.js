@@ -50,7 +50,7 @@ export async function tryTrade(req, res) {
 
     // 가격 무결성 체크
     if (itemprice !== transactionprice) {
-        console.error("E무결성 오류 : 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.", error);
+        console.error("E무결성 오류 : 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.");
         return res.status(403).json({ message: '무결성 오류 : 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.' });
     }
 
@@ -59,13 +59,13 @@ export async function tryTrade(req, res) {
         if (moneybefore >= (itemprice * itemcount)) {
             moneyafter = moneybefore - (itemprice * itemcount);
         } else {
-            console.error("오류 : 사용자의 보유 재산을 넘는 요청입니다.", error);
+            console.error("오류 : 사용자의 보유 재산을 넘는 요청입니다.");
             return res.status(403).json({ message: '오류 : 사용자의 보유 재산을 넘는 요청입니다.' });
         }
     } else if (type === 'sell') {
         moneyafter = moneybefore + (itemprice * itemcount);
     } else {
-        console.error("오류 : 잘못된 인수로 요청되었습니다.", error);
+        console.error("오류 : 잘못된 인수로 요청되었습니다.");
         return res.status(403).json({ message: '오류 : 잘못된 인수로 요청되었습니다.' });
     }
 

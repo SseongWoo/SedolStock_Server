@@ -1,6 +1,6 @@
 import express from 'express';
 import { signUpUser, signInUser, resetPassword, changePassword, sendEmail, checkEmail, deleteUserAuth, tokenLogin } from './controllers/authControllers.js';
-import { getUserData, deleteUser, signUpUserData1, signUpUserData2, searchName, updateName, getUserWallet, updateUserTotalMoney } from './controllers/userControllers.js';
+import { getUserData, deleteUser, signUpUserData1, signUpUserData2, searchName, updateName, getUserWallet, updateUserTotalMoney, updateChoiceChannel, restartUserData } from './controllers/userControllers.js';
 import { getUserTradeDataList, tryTrade } from './controllers/tradeControllers.js';
 import { getChannelIdByName, updateChannelInfoData, getChannelInfoData, updateVideoData, getVideoData, updateLiveData, getLiveData, updateLatestVideoInfo, getLatestVideoInfo } from './controllers/youtubeControllers.js';
 import { getRankData, setRankData } from './controllers/rankControllers.js'
@@ -30,13 +30,16 @@ apiRouter.post('/signin', signInUser);
 apiRouter.post('/signin/tokenlogin', tokenLogin);
 
 // 사용자 인증 데이터 삭제
-apiRouter.post('/deleteUser/:uid', deleteUserAuth);
+apiRouter.delete('/deleteUser', deleteUserAuth);
 
 // 사용자 데이터 등록 (POST /users)
 apiRouter.post('/users', signUpUserData1);
 
 // 사용자 데이터 업데이트 (PUT /users/:id)
 apiRouter.put('/users/set', signUpUserData2);
+
+// 사용자 데이터 초기화
+apiRouter.put('/users/restart', restartUserData);
 
 // 사용자 이름으로 검색 (GET /names/:name)
 apiRouter.get('/names/:name', searchName);
@@ -46,8 +49,8 @@ apiRouter.get('/names/:name', searchName);
 // 사용자 이름 업데이트 (PUT /names/:name)
 apiRouter.put('/names/update', updateName);
 
-// 사용자 데이터 삭제 (DELETE /users/:id)
-apiRouter.delete('/users/:id', deleteUser);
+// // 사용자 데이터 삭제 (DELETE /users/:id)
+// apiRouter.delete('/users/:id', deleteUser);
 
 // 사용자 데이터 가져오기 (GET /users/:uid)
 apiRouter.get('/users/:uid', getUserData);
@@ -95,6 +98,8 @@ apiRouter.post('/rank/set', setRankData);
 apiRouter.get('/rank/get', getRankData);
 
 apiRouter.put('/users/updatetotalmoney/:uid', updateUserTotalMoney);
+
+apiRouter.put('/fanname/update', updateChoiceChannel);
 
 // 서버 실행
 app.listen(PORT, () => {

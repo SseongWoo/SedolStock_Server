@@ -140,15 +140,41 @@ export async function updateName(req, res) {
     const { uid, name, newname } = req.body;
 
     try {
-        const userDocRef = doc(db, 'users', uid);
-        const nameDocRef = doc(db, 'names', name);
+        const userDocRef = db.collection('users').doc(uid);
+        const nameDocRef = db.collection('names').doc(name);
 
+        // Firebase Admin SDK를 사용하여 작업 수행
         // 파이어베이스에 문서의 이름을 변경하는 기능이 없기 때문에 삭제하고 새로 생성
-        await deleteDoc(nameDocRef);
-        await updateDoc(userDocRef, { "name": newname });
-        await createName(uid, newname);
+        await db.runTransaction(async (transaction) => {
+            // 이름 문서 삭제
+            transaction.delete(nameDocRef);
+
+            // 사용자 문서 업데이트
+            transaction.update(userDocRef, { "name": newname });
+
+            // 새로운 이름 문서 생성
+            const newNameDocRef = db.collection('names').doc(newname);
+            transaction.set(newNameDocRef, { uid, 'name': newname }); // 새로운 이름에 대한 문서 생성
+        });
 
         res.status(200).json({ message: `User with name ${newname} updated successfully` });
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ message: 'Failed to update user', error: error.message });
+    }
+}
+
+export async function updateChoiceChannel(req, res) {
+    const { uid, name } = req.body; // 입력에서 필요한 필드만 추출
+
+    try {
+        const userDocRef = db.collection('users').doc(uid);
+
+        // Firebase Admin SDK를 사용하여 작업 수행
+        // 사용자 문서에 'choicechannel' 필드를 업데이트
+        await userDocRef.update({ 'choicechannel': name });
+
+        res.status(200).json({ message: 'User choice channel updated successfully' });
     } catch (error) {
         console.error('Error updating user:', error);
         res.status(500).json({ message: 'Failed to update user', error: error.message });
@@ -375,5 +401,42 @@ async function updateUserTotalMoneyHistory(uid, totalmoney) {
         console.log("User total money updated successfully");
     } catch (error) {
         console.error("Error updating user total money:", error);
+    }
+}
+
+export async function restartUserData(req, res) {
+    const { uid } = req.body;
+    const initialMoney = 1000000; // 초기 자산
+
+    try {
+        const userDocRef = db.collection('users').doc(uid);
+        const totalmoneyDocRef = db.collection('users').doc(uid).collection('wallet').doc('totalmoneyhistory');
+
+        // 거래 데이터 삭제
+        await db.collection('users').doc(uid).collection('trade').doc('0').delete();
+        await db.collection('users').doc(uid).collection('trade').doc('0_last').delete();
+
+        // 사용자 문서 업데이트
+        await userDocRef.update({
+            money: initialMoney,
+            'rank': 0,
+            'totalmoney': initialMoney,
+            'beforerank': 0,
+        });
+
+        // totalmoneyhistory에 초기 데이터 삽입
+        await totalmoneyDocRef.set({
+            totalmoneyhistory: [initialMoney],
+            date: getDate(),
+        });
+
+        // 사용자 지갑 생성
+        await createUserWallet(uid);
+
+        // 성공 응답
+        res.status(201).json({ message: 'User data reset successfully', uid: uid });
+    } catch (error) {
+        console.error('Error resetting user data:', error);
+        res.status(500).json({ message: 'Failed to reset user data', error: error.message });
     }
 }
