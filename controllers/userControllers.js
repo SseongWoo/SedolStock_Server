@@ -1,5 +1,7 @@
 import { admin, db } from '../firebase_admin.js';
 import { getDate } from '../utils/date.js';
+import dotenv from 'dotenv';
+
 dotenv.config({ path: '../.env' });
 
 const channelIdList = process.env.CHANNEL_ID_LIST.split(',');
