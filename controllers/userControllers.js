@@ -1,12 +1,8 @@
 import { admin, db } from '../firebase_admin.js';
 import { getDate } from '../utils/date.js';
+dotenv.config({ path: '../.env' });
 
-const channelIdList = [
-    'UCBkyj16n2snkRg1BAzpovXQ', 'UCZOcwheypMvYN_J2oRBgt2A', 'UCroM00J2ahCN6k-0-oAiDxg',
-    'UCmHltryGykfakS-JmaxrNBg', 'UCHE7GBQVtdh-c1m3tjFdevQ', 'UC-S9NE-xzcBpxOFSvsmOzAA',
-    'UC-oCJP9t47v7-DmsnmXV38Q', 'UC8dEJs2kpS5x2vI1X7aaUhA', 'UCTifMx1ONpElK5x6B4ng8eg',
-    'UCgGvSg2lscdNUx9ZJIBh9FQ', 'UCV9WL7sW6_KjanYkUUaIDfQ', 'UCSSPlgcyDA5eoN3hrkXpvHg', 'UCs6EwgxKLY9GG4QNUrP5hoQ', 'UCuJUfqThFp5-k-lrHcO1dFg'
-];
+const channelIdList = process.env.CHANNEL_ID_LIST.split(',');
 
 const stockType = ['view', 'comment', 'like'];
 
