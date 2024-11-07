@@ -1,16 +1,21 @@
 import admin from 'firebase-admin';
 import fs from 'fs';
+import dotenv from 'dotenv';
+dotenv.config({ path: '../.env' });
+
+const serviceAccountURL = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT;
+const storageBucketURL = process.env.FIREBASE_ADMIN_STORAGE_BUCKET;
 
 // JSON 파일을 CommonJS 방식으로 읽어오기
 const serviceAccount = JSON.parse(
-    fs.readFileSync(new URL('./stockprojecttest-10805-firebase-adminsdk-zxjew-e40a0b9e60.json', import.meta.url))
+    fs.readFileSync(new URL(serviceAccountURL, import.meta.url))
 );
 
 // Firebase Admin 초기화
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        storageBucket: 'gs://stockprojecttest-10805.appspot.com' // Firebase Storage 버킷 이름 (프로젝트 설정에서 확인)
+        storageBucket: storageBucketURL // Firebase Storage 버킷 이름 (프로젝트 설정에서 확인)
     });
 }
 

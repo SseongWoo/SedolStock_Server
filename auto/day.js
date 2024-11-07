@@ -1,6 +1,4 @@
-import { setRankData } from '../controllers/rankControllers.js';
-import { updateLatestVideoInfo, updateVideoData } from '../controllers/youtubeControllers.js'
-
+import { setRankData, updateLatestVideoInfo, updateVideoData } from './controllers.js';
 
 // 랭킹 업데이트
 await setRankData();

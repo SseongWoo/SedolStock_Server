@@ -1,13 +1,11 @@
-import { collection, addDoc, getDoc, doc, deleteDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { admin, db } from '../firebase_admin.js';
 import { getDate } from '../utils/date.js';
-import multer from 'multer';
 
 const channelIdList = [
-    'UC2b4WRE5BZ6SIUWBeJU8rwg', 'UCIVFv8AiQLqM9oLHTixrNYw', 'UCKzfyYWHQ92z_2jUcSABM8Q',
-    'UClbYIn9LDbbFZ9w2shX3K0g', 'UCAHVQ44O81aehLWfy9O6Elw', 'UC_eeSpMBz8PG4ssdBPnP07g',
-    'UC1afpiIuBDcjYlmruAa0HiA', 'UC7-m6jQLinZQWIbwm9W-1iw', 'UCQmcltnre6aG9SkDRYZqFIg',
-    'UCYxLMfeX1CbMBll9MsGlzmw', 'UCcA21_PzN1EhNe7xS4MJGsQ', 'UCj0c1jUr91dTetIQP2pFeLA'
+    'UCBkyj16n2snkRg1BAzpovXQ', 'UCZOcwheypMvYN_J2oRBgt2A', 'UCroM00J2ahCN6k-0-oAiDxg',
+    'UCmHltryGykfakS-JmaxrNBg', 'UCHE7GBQVtdh-c1m3tjFdevQ', 'UC-S9NE-xzcBpxOFSvsmOzAA',
+    'UC-oCJP9t47v7-DmsnmXV38Q', 'UC8dEJs2kpS5x2vI1X7aaUhA', 'UCTifMx1ONpElK5x6B4ng8eg',
+    'UCgGvSg2lscdNUx9ZJIBh9FQ', 'UCV9WL7sW6_KjanYkUUaIDfQ', 'UCSSPlgcyDA5eoN3hrkXpvHg', 'UCs6EwgxKLY9GG4QNUrP5hoQ', 'UCuJUfqThFp5-k-lrHcO1dFg'
 ];
 
 const stockType = ['view', 'comment', 'like'];
@@ -116,24 +114,24 @@ export async function searchName(req, res) {
         res.status(500).json({ message: 'Failed to get user', error: error.message });
     }
 }
-// 사용자 삭제
-export async function deleteUser(req, res) {
-    const { id } = req.params;
+// // 사용자 삭제
+// export async function deleteUser(req, res) {
+//     const { id } = req.params;
 
-    try {
-        // 'users' 컬렉션에서 해당 ID를 가진 문서 참조
-        const userDocRef = db.collection('users').doc(id);
+//     try {
+//         // 'users' 컬렉션에서 해당 ID를 가진 문서 참조
+//         const userDocRef = db.collection('users').doc(id);
 
-        // 문서 삭제
-        await userDocRef.delete();
+//         // 문서 삭제
+//         await userDocRef.delete();
 
-        // 성공적으로 삭제된 경우 응답 반환
-        res.status(200).json({ message: `User with ID ${id} deleted successfully` });
-    } catch (error) {
-        console.error('Error deleting user:', error);
-        res.status(500).json({ message: 'Failed to delete user', error: error.message });
-    }
-}
+//         // 성공적으로 삭제된 경우 응답 반환
+//         res.status(200).json({ message: `User with ID ${id} deleted successfully` });
+//     } catch (error) {
+//         console.error('Error deleting user:', error);
+//         res.status(500).json({ message: 'Failed to delete user', error: error.message });
+//     }
+// }
 
 // 이름 변경 기능 함수
 export async function updateName(req, res) {
@@ -279,16 +277,17 @@ async function createUserWallet(uid) {
 
         // 각 채널 ID와 stockType을 조합하여 키를 생성하고 데이터를 설정
         let walletData = {};
-        channelIdList.forEach(channelId => {
+        for (let i = 0; i < channelIdList.length; i += 2) {
+            const channelId = channelIdList[i];
             stockType.forEach(type => {
                 const key = `${channelId}_${type}`;
                 walletData[key] = {
-                    stockName: `${channelId}_${type}`, // 기본값 설정 (예: 빈 문자열)
+                    stockName: `${channelId}_${type}`, // 기본값 설정
                     stockCount: 0, // 기본값 설정
                     stockPrice: 0  // 기본값 설정
                 };
             });
-        });
+        }
 
         // Firestore에 데이터를 저장
         await walletDocRef.set(walletData);

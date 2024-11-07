@@ -1,9 +1,9 @@
 import express from 'express';
 import { signUpUser, signInUser, resetPassword, changePassword, sendEmail, checkEmail, deleteUserAuth, tokenLogin } from './controllers/authControllers.js';
-import { getUserData, deleteUser, signUpUserData1, signUpUserData2, searchName, updateName, getUserWallet, updateUserTotalMoney, updateChoiceChannel, restartUserData } from './controllers/userControllers.js';
+import { getUserData, signUpUserData1, signUpUserData2, searchName, updateName, getUserWallet, updateUserTotalMoney, updateChoiceChannel, restartUserData } from './controllers/userControllers.js';
 import { getUserTradeDataList, tryTrade } from './controllers/tradeControllers.js';
-import { getChannelIdByName, updateChannelInfoData, getChannelInfoData, updateVideoData, getVideoData, updateLiveData, getLiveData, updateLatestVideoInfo, getLatestVideoInfo } from './controllers/youtubeControllers.js';
-import { getRankData, setRankData } from './controllers/rankControllers.js'
+import { getChannelIdByName, getChannelInfoData, getVideoData, getLiveData, getLatestVideoInfo } from './controllers/youtubeControllers.js';
+import { getRankData } from './controllers/rankControllers.js'
 
 // Express 애플리케이션 초기화
 const app = express();
@@ -73,19 +73,19 @@ apiRouter.post('/users/checkemail', checkEmail);
 // 유튜브 채널 이름으로 UID 획득 (POST /youtube/getchannelid)
 apiRouter.post('/youtube/getchannelid', getChannelIdByName);
 
-apiRouter.post('/youtube/updatechannelinfo', updateChannelInfoData);
+//apiRouter.post('/youtube/updatechannelinfo', updateChannelInfoData);
 
 apiRouter.get('/youtube/getchannelinfo', getChannelInfoData);
 
-apiRouter.post('/youtube/updatevideodata', updateVideoData);
+//apiRouter.post('/youtube/updatevideodata', updateVideoData);
 
 apiRouter.get('/youtube/getvideodata', getVideoData);
 
-apiRouter.post('/youtube/updatelivedata', updateLiveData);
+//apiRouter.post('/youtube/updatelivedata', updateLiveData);
 
 apiRouter.get('/youtube/getlivedata', getLiveData);
 
-apiRouter.post('/youtube/updateLatestVideoInfo', updateLatestVideoInfo);
+//apiRouter.post('/youtube/updateLatestVideoInfo', updateLatestVideoInfo);
 
 apiRouter.get('/youtube/getLatestVideoInfo', getLatestVideoInfo);
 
@@ -93,7 +93,7 @@ apiRouter.get('/users/wallet/:uid', getUserWallet);
 
 apiRouter.get('/users/tradeList/:uid', getUserTradeDataList);
 
-apiRouter.post('/rank/set', setRankData);
+//apiRouter.post('/rank/set', setRankData);
 
 apiRouter.get('/rank/get', getRankData);
 

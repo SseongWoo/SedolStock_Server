@@ -3,20 +3,27 @@ import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics, isSupported } from 'firebase/analytics'; // Analytics를 지원할 때만 가져오기
 import { getAuth } from '@firebase/auth';
+import dotenv from 'dotenv';
 
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+dotenv.config({ path: '.env' });
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const apiKey = process.env.FIREBASE_CONFIG_API_KEY;
+const authDomain = process.env.FIREBASE_CONFIG_AUTH_DOMAIN;
+const projectId = process.env.FIREBASE_CONFIG_PROJECT_ID;
+const storageBucket = process.env.FIREBASE_CONFIG_STORAGE_BUCKET;
+const messagingSenderId = process.env.FIREBASE_CONFIG_MESSAGING_SENDER_ID;
+const appId = process.env.FIREBASE_CONFIG_APP_ID;
+const measurementId = process.env.FIREBASE_CONFIG_MEASUREMENT_ID;
+
+
 const firebaseConfig = {
-    apiKey: "AIzaSyAsSJwaHWZvEjWhdDLLc9eLS43Sx1qjLUc",
-    authDomain: "stockprojecttest-10805.firebaseapp.com",
-    projectId: "stockprojecttest-10805",
-    storageBucket: "stockprojecttest-10805.appspot.com",
-    messagingSenderId: "300613032247",
-    appId: "1:300613032247:web:7fef9a7ffc082948cb22b2",
-    measurementId: "G-431ZW07WPX"
+    apiKey: apiKey,
+    authDomain: authDomain,
+    projectId: projectId,
+    storageBucket: storageBucket,
+    messagingSenderId: messagingSenderId,
+    appId: appId,
+    measurementId: measurementId
 };
 
 // Firebase 초기화
