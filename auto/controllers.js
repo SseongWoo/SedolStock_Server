@@ -1,9 +1,9 @@
-import { google } from 'googleapis';
-import { db } from '../firebase_admin.js';
-import { getDate, getTime, getDayName, newGetTime } from '../utils/date.js';
 import dotenv from 'dotenv';
-
 dotenv.config({ path: '../.env' });
+import { google } from 'googleapis';
+import { db } from './firebase_admin _auto.js';
+import { getDate, getTime, getDayName, newGetTime } from '../utils/date.js';
+
 const apiKey = process.env.YOUTUBE_API_KEY;
 const channelIdList = process.env.CHANNEL_ID_LIST.split(',');
 
@@ -89,6 +89,8 @@ async function saveToFirestore(path, data, options = { merge: true }) {
 // 메인 업데이트 함수
 export async function updateLiveData() {
     try {
+
+
         const [lastDoc, chartDataDoc, doc] = await Promise.all([
             db.collection('youtubelivedata').doc('0').get(),
             db.collection('youtubelivedata').doc('0_chart').get(),
