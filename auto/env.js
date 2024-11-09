@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' }); // .env 파일 로드
+dotenv.config({ path: '/home/ec2-user/sp/SP/.env' }); // .env 파일 로드
 
 // 변수 선언
 const serviceAccountURL = process.env.FIREBASE_ADMIN_AUTO_SERVICE_ACCOUNT;
