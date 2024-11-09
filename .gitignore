@@ -3,6 +3,6 @@ package-lock.json
 stockprojecttest-10805-firebase-adminsdk-zxjew-e40a0b9e60.json
 stockproject-c98ff-firebase-adminsdk-auevd-c1b9df5bcc.json
 
-./auto/test.js
-test.js
+auto/stockproject-c98ff-firebase-adminsdk-auevd-c1b9df5bcc.json
+auto/.env.auto
 .env
