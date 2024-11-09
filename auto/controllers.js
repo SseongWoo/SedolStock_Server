@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
 import { google } from 'googleapis';
-import { db } from './firebase_admin _auto.js';
+import { db } from './firebase_admin_auto.js';
 import { getDate, getTime, getDayName, newGetTime } from '../utils/date.js';
 
 const apiKey = process.env.YOUTUBE_API_KEY;
