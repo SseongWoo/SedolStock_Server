@@ -1,7 +1,7 @@
 import admin from 'firebase-admin';
 import fs from 'fs';
 import dotenv from 'dotenv';
-dotenv.config({ path: '.env.auto' });
+dotenv.config({ path: './.env.auto' });
 
 const serviceAccountURL = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT;
 const storageBucketURL = process.env.FIREBASE_ADMIN_STORAGE_BUCKET;
