@@ -1,11 +1,19 @@
 // Firebase를 사용하기 위해 firebase 모듈을 import 합니다.
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// 현재 파일의 디렉터리 이름을 얻기
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// .env 파일 경로 설정
+dotenv.config({ path: path.resolve(__dirname, './.env') });
+
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAnalytics, isSupported } from 'firebase/analytics'; // Analytics를 지원할 때만 가져오기
 import { getAuth } from '@firebase/auth';
-import dotenv from 'dotenv';
-
-dotenv.config({ path: '.env' });
 
 const apiKey = process.env.FIREBASE_CONFIG_API_KEY;
 const authDomain = process.env.FIREBASE_CONFIG_AUTH_DOMAIN;

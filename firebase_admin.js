@@ -1,5 +1,13 @@
 import dotenv from 'dotenv';
-dotenv.config({ path: './.env' });
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// 현재 파일의 디렉터리 이름을 얻기
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// .env 파일 경로 설정
+dotenv.config({ path: path.resolve(__dirname, './.env') });
 import admin from 'firebase-admin';
 import fs from 'fs';
 

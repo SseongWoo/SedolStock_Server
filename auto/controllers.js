@@ -1,8 +1,19 @@
-import { apiKey, channelIdList } from './env.js';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// 현재 파일의 디렉터리 이름을 얻기
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// .env 파일 경로 설정
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import { google } from 'googleapis';
-import { db } from './firebase_admin_auto.js';
+import { db } from '../firebase_admin.js';
 import { getDate, getTime, getDayName, newGetTime } from '../utils/date.js';
 
+const apiKey = process.env.YOUTUBE_API_KEY;
+const channelIdList = process.env.CHANNEL_ID_LIST ? process.env.CHANNEL_ID_LIST.split(',') : [];
 
 // YouTube API 인스턴스를 생성합니다.
 const youtube = google.youtube({
