@@ -1,11 +1,8 @@
-import dotenv from 'dotenv';
-dotenv.config({ path: '../.env' });
+import { apiKey, channelIdList } from './env.js';
 import { google } from 'googleapis';
 import { db } from './firebase_admin_auto.js';
 import { getDate, getTime, getDayName, newGetTime } from '../utils/date.js';
 
-const apiKey = process.env.YOUTUBE_API_KEY;
-const channelIdList = process.env.CHANNEL_ID_LIST.split(',');
 
 // YouTube API 인스턴스를 생성합니다.
 const youtube = google.youtube({
