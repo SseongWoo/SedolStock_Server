@@ -151,7 +151,6 @@ export async function updateLiveData() {
                 updateCountDifferences(countMap[channelItem], subCountMap[subChannelItem]);
 
                 updatePriceDifferences(countMap[channelItem]);
-                updatePriceDifferences(subCountMap[subChannelItem]);
 
                 updateChartDataList(chartDataList, channelItem, countMap[channelItem]);
 
