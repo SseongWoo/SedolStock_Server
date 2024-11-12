@@ -99,8 +99,9 @@ export async function updateLiveData() {
     try {
 
 
-        const [lastDoc, chartDataDoc, doc] = await Promise.all([
+        const [lastDoc, lastSubDoc, chartDataDoc, doc] = await Promise.all([
             db.collection('youtubelivedata').doc('0').get(),
+            db.collection('youtubelivedata').doc('0_sub').get(),
             db.collection('youtubelivedata').doc('0_chart').get(),
             db.collection('youtubevideos').doc('0').get()
         ]);
@@ -111,6 +112,7 @@ export async function updateLiveData() {
         }
 
         const countMapData = lastDoc.data() || {};
+        const countSubMapData = lastSubDoc.data() || {};
         const chartDataList = chartDataDoc.data() || {};
         const channelDataObject = doc.data();
 
@@ -140,7 +142,7 @@ export async function updateLiveData() {
                 ]);
 
                 const existingData = countMapData[channelItem] || {};
-                const subExistingData = countMapData[subChannelItem] || {};
+                const subExistingData = countSubMapData[subChannelItem] || {};
 
                 countMap[channelItem] = initializeCountData(existingData);
                 subCountMap[subChannelItem] = initializeCountData(subExistingData);
