@@ -100,11 +100,16 @@ export async function getLiveData(req, res) {
     try {
         // Firestore에서 데이터 가져오기
         const lastDoc = await db.collection('youtubelivedata').doc('0').get();
+        const lastSubDoc = await db.collection('youtubelivedata').doc('0_sub').get();
         const chartDataDoc = await db.collection('youtubelivedata').doc('0_chart').get();
 
         // 데이터가 존재하는지 확인
         if (!lastDoc.exists) {
             return res.status(404).json({ message: 'No data found in Firestore for document "0"' });
+        }
+
+        if (!lastSubDoc.exists) {
+            return res.status(404).json({ message: 'No chart data found in Firestore for document "0_chart"' });
         }
 
         if (!chartDataDoc.exists) {
@@ -113,13 +118,15 @@ export async function getLiveData(req, res) {
 
         // Firestore에서 가져온 데이터
         const countMapData = lastDoc.data() || {};
+        const countSubMapData = lastSubDoc.data() || {};
         const chartDataList = chartDataDoc.data() || {};
 
         // 응답 전송
         return res.status(200).json({
             message: 'Live data and chart data retrieved successfully.',
             countMapData: countMapData,
-            chartDataList: chartDataList
+            chartDataList: chartDataList,
+            countSubMapData: countSubMapData
         });
 
     } catch (error) {
