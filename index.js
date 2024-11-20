@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import { signUpUser, signInUser, resetPassword, changePassword, sendEmail, checkEmail, deleteUserAuth, tokenLogin } from './controllers/authControllers.js';
 import { getUserData, signUpUserData1, signUpUserData2, searchName, updateName, getUserWallet, updateUserTotalMoney, updateChoiceChannel, restartUserData } from './controllers/userControllers.js';
 import { getUserTradeDataList, tryTrade } from './controllers/tradeControllers.js';
@@ -10,9 +11,13 @@ const app = express();
 const PORT = 3000;
 const apiRouter = express.Router();
 
+// CORS 설정
+app.use(cors());
 
 // JSON 본문 파싱을 위해 설정
 app.use(express.json());
+
+// API 라우터 연결
 app.use('/api', apiRouter);
 
 // 서버가 열려있는지 확인

@@ -155,7 +155,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
             console.log(moneyAfterList);
 
             // 거래 리스트가 50개를 초과할 경우 가장 오래된 항목 제거
-            if (moneyBeforeList.length >= 50) {
+            if (moneyBeforeList.length >= 100) {
                 moneyBeforeList.shift();
                 moneyAfterList.shift();
                 tradeTimeList.shift();
