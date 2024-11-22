@@ -20,6 +20,10 @@ app.use(express.json());
 // API 라우터 연결
 app.use('/api', apiRouter);
 
+apiRouter.get('/healthcheck', (req, res) => {
+    res.status(200).send('OK');
+});
+
 // 서버가 열려있는지 확인
 apiRouter.get('/running', (req, res) => {
     res.status(200).send('Server is running');
