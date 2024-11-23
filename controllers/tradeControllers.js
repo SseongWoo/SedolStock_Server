@@ -41,7 +41,7 @@ export async function tryTrade(req, res) {
     const moneybefore = await getUserMoneyData(uid);
     const tradetime = new Date().toISOString(); // 시간은 ISO 문자열로 저장
     let moneyafter = 0;
-
+    const feeRate = 0.05;
     // 데이터가 없을 경우의 오류 처리
     if (itemprice === null || moneybefore === null) {
         return res.status(500).json({ message: '가격 데이터를 불러오는데 실패하였습니다.' });
@@ -53,10 +53,12 @@ export async function tryTrade(req, res) {
         return res.status(403).json({ message: '무결성 오류 : 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.' });
     }
 
+
+    let fee = (itemprice * itemcount) * feeRate;
     // 거래 유형에 따른 계산 처리
     if (type === 'buy') {
-        if (moneybefore >= (itemprice * itemcount)) {
-            moneyafter = moneybefore - (itemprice * itemcount);
+        if (moneybefore >= (itemprice * itemcount) + fee) {
+            moneyafter = moneybefore - (itemprice * itemcount) + fee;
         } else {
             console.error("오류 : 사용자의 보유 재산을 넘는 요청입니다.");
             return res.status(403).json({ message: '오류 : 사용자의 보유 재산을 넘는 요청입니다.' });
