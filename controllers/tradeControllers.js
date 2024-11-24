@@ -54,11 +54,11 @@ export async function tryTrade(req, res) {
     }
 
 
-    let fee = (itemprice * itemcount) * feeRate;
+    let fee = Math.round((itemprice * itemcount) * feeRate);
     // 거래 유형에 따른 계산 처리
     if (type === 'buy') {
         if (moneybefore >= (itemprice * itemcount) + fee) {
-            moneyafter = moneybefore - (itemprice * itemcount) + fee;
+            moneyafter = Math.round(moneybefore - (itemprice * itemcount) + fee);
         } else {
             console.error("오류 : 사용자의 보유 재산을 넘는 요청입니다.");
             return res.status(403).json({ message: '오류 : 사용자의 보유 재산을 넘는 요청입니다.' });
