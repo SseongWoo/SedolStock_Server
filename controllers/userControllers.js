@@ -394,8 +394,6 @@ async function updateUserTotalMoneyHistory(uid, totalmoney) {
 
         // totalmoneylogDocRef의 데이터 업데이트
         await totalmoneylogDocRef.set({ totalmoney: currentMoney }, { merge: true });
-
-        console.log("User total money updated successfully");
     } catch (error) {
         console.error("Error updating user total money:", error);
     }

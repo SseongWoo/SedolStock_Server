@@ -186,7 +186,17 @@ export async function tokenLogin(req, res) {
                 idToken: loginData.idToken,
             });
         } else {
-            return res.status(401).json({ message: 'Invalid ID Token' });
+            token = await getIdToken(refreshToken);
+            if (loginData) {
+                // 검증 성공 시 사용자 정보 반환
+                return res.status(200).json({
+                    message: 'Login successful',
+                    uid: loginData.uid,
+                    idToken: loginData.idToken,
+                });
+            } else {
+                return res.status(401).json({ message: 'Invalid ID Token' });
+            }
         }
     } catch (error) {
         console.error('Error during login:', error);
