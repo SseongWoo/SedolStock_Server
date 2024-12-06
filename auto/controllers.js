@@ -14,6 +14,8 @@ import { getDate, getTime, getDayName, newGetTime } from '../utils/date.js';
 
 const apiKey = process.env.YOUTUBE_API_KEY;
 const channelIdList = process.env.CHANNEL_ID_LIST ? process.env.CHANNEL_ID_LIST.split(',') : [];
+const delistingTime = 5;
+
 
 // YouTube API 인스턴스를 생성합니다.
 const youtube = google.youtube({
@@ -97,8 +99,6 @@ async function saveToFirestore(path, data, options = { merge: true }) {
 // 메인 업데이트 함수
 export async function updateLiveData() {
     try {
-
-
         const [lastDoc, lastSubDoc, chartDataDoc, doc] = await Promise.all([
             db.collection('youtubelivedata').doc('0').get(),
             db.collection('youtubelivedata').doc('0_sub').get(),
@@ -192,6 +192,9 @@ function initializeCountData(existingData) {
         viewCountPrice: 0,
         likeCountPrice: 0,
         commentCountPrice: 0,
+        viewDelisting: existingData.viewDelisting || 0,
+        likeDelisting: existingData.likeDelisting || 0,
+        commentDelisting: existingData.commentDelisting || 0,
         updateTime: getTime(),
     };
 }
@@ -215,9 +218,36 @@ function updateCountDifferences(countData, subCountData) {
 
 // 유틸 함수: 가격 업데이트
 function updatePriceDifferences(countData) {
-    countData.viewCountPrice += countData.differenceViewCount - countData.lastDifferenceViewCount;
-    countData.likeCountPrice += (countData.differenceLikeCount * 1000) - (countData.lastDifferenceLikeCount * 1000);
-    countData.commentCountPrice += countData.differenceCommentCount - countData.lastDifferenceCommentCount;
+    if (countData.viewDelisting > 0) {
+        countData.viewCountPrice = 0;
+        countData.viewDelisting--;
+    } else {
+        countData.viewCountPrice += (countData.differenceViewCount * 100) - (countData.lastDifferenceViewCount * 100);
+        if (countData.viewCountPrice <= 0) {
+            countData.viewCountPrice = 0;
+            countData.viewDelisting = delistingTime;
+        }
+    }
+    if (countData.likeDelisting > 0) {
+        countData.likeCountPrice = 0;
+        countData.likeDelisting--;
+    } else {
+        countData.likeCountPrice += (countData.differenceLikeCount * 1000) - (countData.lastDifferenceLikeCount * 1000);
+        if (countData.likeCountPrice <= 0) {
+            countData.likeCountPrice = 0;
+            countData.likeDelisting = delistingTime;
+        }
+    }
+    if (countData.commentDelisting > 0) {
+        countData.commentCountPrice = 0;
+        countData.commentDelisting--;
+    } else {
+        countData.commentCountPrice += countData.differenceCommentCount - countData.lastDifferenceCommentCount;
+        if (countData.commentCountPrice <= 0) {
+            countData.commentCountPrice = 0;
+            countData.commentDelisting = delistingTime;
+        }
+    }
 }
 
 // 유틸 함수: 차트 데이터 업데이트
