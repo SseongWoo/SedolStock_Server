@@ -187,7 +187,7 @@ function initializeCountData(existingData) {
         lastDifferenceLikeCount: existingData.differenceLikeCount || 0,
         lastDifferenceCommentCount: existingData.differenceCommentCount || 0,
         lastViewCountPrice: existingData.viewCountPrice || 10000,
-        lastLikeCountPrice: existingData.likeCountPrice || 10000,
+        lastLikeCountPrice: existingData.likeCountPrice || 100000,
         lastCommentCountPrice: existingData.commentCountPrice || 10000,
         viewCountPrice: 0,
         likeCountPrice: 0,
@@ -208,15 +208,15 @@ function aggregateStatistics(items, countData) {
 
 // 유틸 함수: 차이 계산
 function updateCountDifferences(countData, subCountData) {
-    countData.differenceViewCount = countData.totalViewCount - subCountData.totalViewCount;
-    countData.differenceLikeCount = countData.totalLikeCount - subCountData.totalLikeCount;
-    countData.differenceCommentCount = countData.totalCommentCount - subCountData.totalCommentCount;
+    countData.differenceViewCount = countData.totalViewCount + subCountData.totalViewCount;
+    countData.differenceLikeCount = countData.totalLikeCount + subCountData.totalLikeCount;
+    countData.differenceCommentCount = countData.totalCommentCount + subCountData.totalCommentCount;
 }
 
 // 유틸 함수: 가격 업데이트
 function updatePriceDifferences(countData) {
     countData.viewCountPrice += countData.differenceViewCount - countData.lastDifferenceViewCount;
-    countData.likeCountPrice += countData.differenceLikeCount - countData.lastDifferenceLikeCount;
+    countData.likeCountPrice += (countData.differenceLikeCount * 1000) - (countData.lastDifferenceLikeCount * 1000);
     countData.commentCountPrice += countData.differenceCommentCount - countData.lastDifferenceCommentCount;
 }
 
@@ -422,10 +422,10 @@ export async function setRankData() {
         const rankingDocRef = db.collection('rank').doc('0ranking');
         await rankingDocRef.set({ users: userList, 'updatedate': getDate() });
 
-        const rankListDocRef = db.collection('rank').doc(getDate());
-        await rankListDocRef.set({ users: userList });
+        const rankListDocRef = db.collection('rank').doc(getDayName());
+        await rankListDocRef.set({ users: userList, 'updatedate': getDate() });
 
-        console.log('setRankData');
+        console.log(`setRankData : updateRank ${getDate()}`);
     } catch (error) {
         console.error('Error fetching top users:', error);
     }
