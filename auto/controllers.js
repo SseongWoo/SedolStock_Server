@@ -226,7 +226,7 @@ function updateChartDataList(chartDataList, channelItem, countData) {
         chartDataList[channelItem] = { viewCount: [], likeCount: [], commentCount: [] };
     }
 
-    if (chartDataList[channelItem].viewCount.length > 144) {
+    if (chartDataList[channelItem].viewCount.length > 50) {
         chartDataList[channelItem].viewCount.shift();
         chartDataList[channelItem].likeCount.shift();
         chartDataList[channelItem].commentCount.shift();
