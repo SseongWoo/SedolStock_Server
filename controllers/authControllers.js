@@ -187,6 +187,7 @@ export async function tokenLogin(req, res) {
             });
         } else {
             token = await getIdToken(refreshToken);
+            loginData = await tryLogin(token);
             if (loginData) {
                 // 검증 성공 시 사용자 정보 반환
                 return res.status(200).json({
@@ -199,7 +200,7 @@ export async function tokenLogin(req, res) {
             }
         }
     } catch (error) {
-        console.error('Error during login:', error);
+        console.error('tokenLogin Error during login:', error);
         res.status(500).json({ message: 'Failed to login', error: error.message });
     }
 }
@@ -214,7 +215,7 @@ async function tryLogin(idToken) {
             idToken: idToken,
         };
     } catch (error) {
-        console.error('Failed to verify ID Token:', error);
+        //console.error('tryLogin Failed to verify ID Token:', error);
         return null;
     }
 }
@@ -234,7 +235,7 @@ async function getIdToken(refreshToken) {
         const { id_token } = response.data;
         return id_token;
     } catch (error) {
-        console.error('Failed to refresh token:', error.response?.data || error.message);
+        console.error('getIdToken Failed to refresh token:', error.response?.data || error.message);
         throw new Error('Failed to refresh token');
     }
 }
