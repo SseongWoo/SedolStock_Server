@@ -5,12 +5,22 @@
 ## 클라이언트 프로젝트
 [서버 프로젝트](https://github.com/SseongWoo/Stock_Project_Server)
 
-## 프로젝트 구성
-### 디렉토리 구조
+## 디렉토리 구조
 ```sh
-assets
-├── fonts      # 프로젝트 폰트 폴더
-└── image      # 프로젝트 이미지 폴더
-    ├── fan    # 팬덤 이미지 폴더
-    └── ui     # ui 구성 이미지 폴더
+├── index.js                    # 애플리케이션 초기화 및 라우터 연결 설정 메인파일
+├── firebase.js                 # Firebase 서비스 설정 파일
+├── firebase_admin.js           # 인증, Firestore 데이터베이스 기능을 사용하기 위한 Firebase Admin SDK 설정 파일
+├──auto                         # AWS EC2 에서 스케줄러로 사용할 폴더
+│   ├── controllers.js          # 자동화 작업을 관리하는 주요 컨트롤러 파일
+│   ├── day.js                  # 하루 단위 데이터 처리 파일
+│   ├── minute.js               # 5분 단위 데이터 처리 파일
+│   └── week.js                 # 주 단위 데이터 처리 파일
+└── controllers                 # API 요청을 처리하는 주요 컨트롤러 폴터
+│   ├── authControllers.js      # 사용자 인증 및 계정 관리 파일
+│   ├── rankControllers.js      # 사용자 랭킹 데이터 관리 파일
+│   ├── tradeControllers.js     # 거래 관련 데이터 관리 파일
+│   ├── userControllers.js      # 사용자 데이터 관리 파일
+│   └── youtubeControllers.js   # 유튜브 데이터 관리 파일
+utils
+└── date.js                     # 날짜 형식 변환 기능 파일
 ```
