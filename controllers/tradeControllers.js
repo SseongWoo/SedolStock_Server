@@ -1,4 +1,4 @@
-import { db } from '../firebase_admin.js';
+import { db, FieldValue } from '../firebase_admin.js';
 import { getTime } from '../utils/date.js'
 
 // 사용자 거래 데이터 최대 30일 까지만
@@ -33,7 +33,7 @@ export async function tryTrade(req, res) {
     console.log("priceavg: ", priceavg); // 거래 전, 로그 추가
 
     // Firebase Firestore 경로 설정
-    const userTradeDocRef = db.collection('users').doc(uid).collection('trade').doc(getTime());
+    //const userTradeDocRef = db.collection('users').doc(uid).collection('trade').doc(getTime());
     const userLastTradeDocRef = db.collection('users').doc(uid).collection('trade').doc('0_last');
 
     // 비동기 함수 호출 시 await 사용
@@ -87,17 +87,17 @@ export async function tryTrade(req, res) {
             // 무결성 확인
             if (moneybefore === tradeData.moneyafter) {
                 // 거래 데이터 Firestore에 저장
-                await userTradeDocRef.set({
-                    'moneybefore': moneybefore,
-                    'moneyafter': moneyafter,
-                    'tradetime': tradetime,
-                    'itemuid': itemuid,
-                    'itemtype': itemtype,
-                    'itemcount': itemcount,
-                    'transactionprice': transactionprice,
-                    'type': type,
-                    'priceavg': priceavg,
-                });
+                // await userTradeDocRef.set({
+                //     'moneybefore': moneybefore,
+                //     'moneyafter': moneyafter,
+                //     'tradetime': tradetime,
+                //     'itemuid': itemuid,
+                //     'itemtype': itemtype,
+                //     'itemcount': itemcount,
+                //     'transactionprice': transactionprice,
+                //     'type': type,
+                //     'priceavg': priceavg,
+                // });
 
                 // 마지막 거래 정보 업데이트
                 await userLastTradeDocRef.update({
@@ -118,6 +118,10 @@ export async function tryTrade(req, res) {
                 await updateUserWallet(uid, `${itemuid}_${itemtype}`, itemcount, transactionprice, type);
 
                 await updateUserMoney(uid, moneyafter);
+
+                await setStockCount(itemuid, itemtype, uid, itemcount, type)
+
+
 
                 // 성공 응답
                 res.status(200).json({ message: "Success" });
@@ -409,5 +413,48 @@ async function updateUserMoney(uid, money) {
         }
     } catch (error) {
         console.error("Error updating user money:", error);
+    }
+}
+
+async function setStockCount(itemUid, itemType, uid, count, type) {
+    try {
+        const docRef = db.collection('youtubelivedata')
+            .doc('tradelist')
+            .collection(`${itemUid}_${itemType}`)
+            .doc(uid);
+
+        if (type === 'buy') {
+            // 'buy'일 경우 stockcount를 증가
+            await docRef.set(
+                { stockcount: FieldValue.increment(count) },
+                { merge: true }
+            );
+            console.log(`Document at ${docRef.path} updated (stockcount incremented by ${count})`);
+        } else {
+            // 'sell'과 같은 경우 stockcount 감소 후 조건에 따라 삭제
+            await db.runTransaction(async (transaction) => {
+                const doc = await transaction.get(docRef);
+
+                if (!doc.exists) {
+                    console.log('Document does not exist');
+                    return;
+                }
+
+                const currentStockCount = doc.data().stockcount || 0; // 기본값 0
+                const newStockCount = currentStockCount - count;
+
+                if (newStockCount <= 0) {
+                    // stockcount가 0 이하라면 문서 삭제
+                    transaction.delete(docRef);
+                    console.log(`Document at ${docRef.path} deleted (stockcount reached 0 or below)`);
+                } else {
+                    // stockcount를 감소
+                    transaction.update(docRef, { stockcount: FieldValue.increment(-count) });
+                    console.log(`Document at ${docRef.path} updated (stockcount decremented by ${count})`);
+                }
+            });
+        }
+    } catch (error) {
+        console.error("Error in setStockCount:", error);
     }
 }

@@ -152,7 +152,7 @@ export async function updateLiveData() {
 
                 updateCountDifferences(countMap[channelItem], subCountMap[subChannelItem]);
 
-                updatePriceDifferences(countMap[channelItem]);
+                updatePriceDifferences(countMap[channelItem], channelItem);
 
                 updateChartDataList(chartDataList, channelItem, countMap[channelItem]);
 
@@ -217,7 +217,7 @@ function updateCountDifferences(countData, subCountData) {
 }
 
 // 유틸 함수: 가격 업데이트
-function updatePriceDifferences(countData) {
+function updatePriceDifferences(countData, channelItem) {
     if (countData.viewDelisting > 0) {
         countData.viewCountPrice = 0;
         countData.viewDelisting--;
@@ -226,6 +226,7 @@ function updatePriceDifferences(countData) {
         if (countData.viewCountPrice <= 0) {
             countData.viewCountPrice = 0;
             countData.viewDelisting = delistingTime;
+            deleteDelistingStock(channelItem, 'view');
         }
     }
     if (countData.likeDelisting > 0) {
@@ -236,6 +237,7 @@ function updatePriceDifferences(countData) {
         if (countData.likeCountPrice <= 0) {
             countData.likeCountPrice = 0;
             countData.likeDelisting = delistingTime;
+            deleteDelistingStock(channelItem, 'like');
         }
     }
     if (countData.commentDelisting > 0) {
@@ -266,6 +268,74 @@ function updateChartDataList(chartDataList, channelItem, countData) {
     chartDataList[channelItem].likeCount.push(countData.likeCountPrice);
     chartDataList[channelItem].commentCount.push(countData.commentCountPrice);
 }
+
+async function deleteDelistingStock(itemUid, itemType) {
+    try {
+        const itemName = `${itemUid}_${itemType}`;
+
+        // 1. tradelist 경로의 문서 가져오기 (유저 UID가 문서 이름)
+        const tradelistCollection = db.collection('youtubelivedata')
+            .doc('tradelist')
+            .collection(itemName);
+
+        const tradelistSnapshot = await tradelistCollection.get();
+
+        if (tradelistSnapshot.empty) {
+            console.log(`No tradelist documents found for ${itemName}`);
+            return;
+        }
+
+        const updatePromises = []; // 업데이트 및 메시지 저장 작업을 비동기로 처리
+
+        const currentTime = getTime(); // 동일한 시간 값 사용
+
+        // 2. 각 tradelist 문서 처리
+        for (const doc of tradelistSnapshot.docs) {
+            const userId = doc.id; // 문서 이름이 유저 UID
+            const stockCount = doc.data().stockCount || 0; // 기본값 설정
+
+            // wallet/stock 문서 참조
+            const stockDocRef = db.collection('users').doc(userId).collection('wallet').doc('stock');
+            const messageDocRef = db.collection('users').doc(userId).collection('message').doc(currentTime);
+
+            // 업데이트할 필드 생성
+            const updatedFields = {
+                [itemName]: {
+                    stockCount: 0,
+                    stockPrice: 0,
+                    stockName: itemName,
+                },
+            };
+
+            const messageFields = {
+                itemUid: itemName,
+                stockCount: stockCount,
+                time: currentTime,
+            };
+
+            // 업데이트 및 메시지 저장 작업 추가
+            updatePromises.push(
+                stockDocRef.update(updatedFields)
+                    .then(() => console.log(`Updated stock document for user: ${userId}`))
+                    .catch((error) => console.error(`Error updating stock for user ${userId}:`, error))
+            );
+
+            updatePromises.push(
+                messageDocRef.set(messageFields)
+                    .then(() => console.log(`Set message for user: ${userId}`))
+                    .catch((error) => console.error(`Error setting message for user ${userId}:`, error))
+            );
+        }
+
+        // 3. 모든 업데이트 및 메시지 작업 완료 대기
+        await Promise.all(updatePromises);
+
+        console.log('All stock documents and messages updated successfully.');
+    } catch (error) {
+        console.error('Error updating stock fields and setting messages:', error);
+    }
+}
+
 
 export async function updateVideoData() {
     try {
@@ -458,5 +528,134 @@ export async function setRankData() {
         console.log(`setRankData : updateRank ${getDate()}`);
     } catch (error) {
         console.error('Error fetching top users:', error);
+    }
+}
+
+export async function startDeleteUserData() {
+    try {
+        // 일주일 전의 날짜 계산
+        const date = new Date();
+        date.setDate(date.getDate() - 7);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const oneWeekAgoDate = `${year}-${month}-${day}`;
+
+        // 일주일 전의 'delete' 컬렉션의 문서를 참조
+        const userDocRef = db.collection('delete').doc(oneWeekAgoDate); // 일주일 전의 날짜 사용
+        const userDocSnap = await userDocRef.get();
+
+        // 문서가 존재하는지 확인
+        if (!userDocSnap.exists) {
+            console.log(`No delete data found for date: ${oneWeekAgoDate}`);
+            return;
+        }
+
+        // 문서에서 'uidlist'와 'nameList' 필드 값 가져오기
+        const uidList = userDocSnap.data().uidlist || [];
+        const nameList = userDocSnap.data().namelist || [];
+
+        // 'uidlist'가 있을 때만 처리
+        if (uidList.length > 0) {
+            // 각 uid에 대해 삭제 처리
+            for (const uid of uidList) {
+                try {
+
+                    await deleteStockCount(uid);
+                    // 'trade'와 'wallet' 컬렉션의 하위 문서 삭제
+                    await deleteSubcollection(db.collection('users').doc(uid).collection('trade'));
+                    await deleteSubcollection(db.collection('users').doc(uid).collection('wallet'));
+                    await db.collection('users').doc(uid).delete();
+                    console.log(`User document and subcollections for UID: ${uid} deleted successfully.`);
+                } catch (error) {
+                    console.error(`Error deleting user document and subcollections for UID: ${uid}:`, error);
+                }
+            }
+        }
+
+        // 'nameList'가 있을 때만 처리
+        if (nameList.length > 0) {
+            // 각 name에 대해 삭제 처리
+            for (const name of nameList) {
+                try {
+                    const nameDocRef = db.collection('names').doc(name);
+                    await nameDocRef.delete();
+                    console.log(`Name document for name: ${name} deleted successfully.`);
+                } catch (error) {
+                    console.error(`Error deleting name document for name: ${name}:`, error);
+                }
+            }
+        }
+
+        // 'delete' 컬렉션의 해당 문서 삭제
+        await userDocRef.delete();
+        console.log(`Old delete data for date: ${oneWeekAgoDate} deleted successfully.`);
+    } catch (error) {
+        console.error(`Error deleting old user data for date ${oneWeekAgoDate}:`, error);
+    }
+}
+
+async function deleteStockCount(uid) {
+    try {
+        // Firestore에서 stock 문서 가져오기
+        const stockDocRef = db.collection('users').doc(uid).collection('wallet').doc('stock');
+        const stockDoc = await stockDocRef.get();
+
+        if (!stockDoc.exists) {
+            console.log('Stock document does not exist for user:', uid);
+            return; // 문서가 없으면 함수 종료
+        }
+
+        // 문서 데이터 가져오기
+        const stockData = stockDoc.data();
+
+        // stockCount > 0인 stockName 필터링
+        const positiveStocks = Object.entries(stockData)
+            .filter(([stockName, stockInfo]) => stockInfo.stockCount > 0) // stockCount 조건
+            .map(([stockName]) => stockName); // stockName만 추출
+
+        if (positiveStocks.length === 0) {
+            console.log(`No stocks to delete for user: ${uid}`);
+            return;
+        }
+
+        console.log(`Deleting stocks for user: ${uid}. Stocks:`, positiveStocks);
+
+        // 병렬 삭제 작업 처리
+        const deletePromises = positiveStocks.map((stockName) => {
+            return db.collection('youtubelivedata')
+                .doc('tradelist')
+                .collection(stockName)
+                .doc(uid)
+                .delete()
+                .then(() => console.log(`Deleted stock ${stockName} for user: ${uid}`))
+                .catch((err) => console.error(`Failed to delete stock ${stockName} for user: ${uid}`, err));
+        });
+
+        // 모든 삭제 작업 완료 대기
+        await Promise.all(deletePromises);
+
+        console.log(`All stocks deleted for user: ${uid}`);
+    } catch (error) {
+        console.error('Error deleting stock data:', error);
+    }
+}
+
+async function deleteSubcollection(collectionRef) {
+    try {
+        const snapshot = await collectionRef.get();
+
+        if (snapshot.empty) {
+            console.log(`No documents in subcollection: ${collectionRef.path}`);
+            return;
+        }
+
+        // 각 문서를 삭제
+        const deletePromises = snapshot.docs.map((doc) => doc.ref.delete());
+        await Promise.all(deletePromises);
+
+        console.log(`Subcollection ${collectionRef.path} deleted successfully.`);
+    } catch (error) {
+        console.error(`Error deleting subcollection ${collectionRef.path}:`, error);
     }
 }

@@ -216,57 +216,6 @@ export async function getUserData(req, res) {
     }
 }
 
-// // 사용자 프로필 설정
-// export async function setUserProfile(req, res) {
-//     try {
-//         const { uid } = req.params;
-
-//         // 파일이 없을 때 오류 처리
-//         if (!req.file) {
-//             return res.status(400).json({ message: 'Photo file is required.' });
-//         }
-//         if (!uid) {
-//             return res.status(400).json({ message: 'UID is required.' });
-//         }
-
-//         // 고유한 파일 이름 생성 및 저장
-//         const fileName = `profile/${uid}`;
-//         const blob = bucket.file(fileName);
-//         const blobStream = blob.createWriteStream({
-//             metadata: {
-//                 contentType: req.file.mimetype,
-//             }
-//         });
-
-//         blobStream.on('error', (error) => {
-//             console.error('Error uploading file to Firebase Storage:', error);
-//             return res.status(500).json({ message: 'Failed to upload photo.', error: error.message });
-//         });
-
-//         blobStream.on('finish', async () => {
-//             try {
-//                 const publicUrl = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
-
-//                 // Firestore에 프로필 URL 저장
-//                 const userDocRef = db.collection('users').doc(uid);
-//                 await userDocRef.set({ profile: publicUrl }, { merge: true });
-
-//                 return res.status(200).json({ message: 'Photo uploaded successfully.', photoUrl: publicUrl });
-//             } catch (error) {
-//                 console.error('Error updating Firestore with the profile URL:', error);
-//                 return res.status(500).json({ message: 'Failed to save profile URL to Firestore.', error: error.message });
-//             }
-//         });
-
-//         // 파일 업로드 시작
-//         blobStream.end(req.file.buffer);
-
-//     } catch (error) {
-//         console.error('Error processing file upload:', error);
-//         return res.status(500).json({ message: 'An error occurred while processing the photo upload.', error: error.message });
-//     }
-// }
-
 // name 컬랙션에 생성할 이름을 문서로 만드는 함수
 async function createUserWallet(uid) {
     try {
@@ -317,9 +266,6 @@ export async function getUserWallet(req, res) {
         res.status(500).json({ message: 'Failed to get document', error: error.message });
     }
 }
-
-
-
 
 export async function updateUserTotalMoney(req, res) {
     const { uid } = req.params;
@@ -433,5 +379,30 @@ export async function restartUserData(req, res) {
     } catch (error) {
         console.error('Error resetting user data:', error);
         res.status(500).json({ message: 'Failed to reset user data', error: error.message });
+    }
+}
+
+// 메세지 데이터 가져오기
+export async function getUserMessageData(req, res) {
+    const { uid } = req.params; // 클라이언트에서 전달된 UID
+
+    try {
+        // 'users' 컬렉션에서 해당 UID의 'message' 컬렉션 모든 문서 가져오기
+        const userMessagesSnapshot = await db.collection('users').doc(uid).collection('message').get();
+
+        if (userMessagesSnapshot.empty) {
+            return res.status(404).json({ message: 'No messages found for the user.' });
+        }
+
+        // 각 문서를 데이터 객체로 변환
+        const messages = userMessagesSnapshot.docs.map((doc) => ({
+            ...doc.data(), // 문서 데이터
+        }));
+
+        // 클라이언트로 메시지 배열 응답
+        res.status(200).json({ messages });
+    } catch (error) {
+        console.error('Error fetching user messages:', error);
+        res.status(500).json({ message: 'Failed to fetch user messages.', error: error.message });
     }
 }

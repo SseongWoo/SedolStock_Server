@@ -30,7 +30,7 @@ if (!admin.apps.length) {
 // Firestore Admin 인스턴스 사용
 const db = admin.firestore();
 const bucket = admin.storage().bucket();
-
+const FieldValue = admin.firestore.FieldValue; // FieldValue 가져오기
 
 // Firebase Admin과 Firestore를 export
-export { admin, db, bucket };
+export { admin, db, bucket, FieldValue };
