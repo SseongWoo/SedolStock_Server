@@ -406,3 +406,50 @@ export async function getUserMessageData(req, res) {
         res.status(500).json({ message: 'Failed to fetch user messages.', error: error.message });
     }
 }
+
+export async function deleteMessageData(req, res) {
+    const { uid } = req.params; // 클라이언트에서 전달된 사용자 UID
+    const { messageUID } = req.body; // 삭제할 메시지의 문서 ID
+
+    try {
+        // 'users' 컬렉션 -> UID -> 'message' 하위 컬렉션 -> messageUID 문서 삭제
+        await db.collection('users').doc(uid).collection('message').doc(messageUID).delete();
+
+        // 성공 응답
+        res.status(200).json({ message: `Message ${messageUID} deleted successfully.` });
+    } catch (error) {
+        console.error('Error deleting user message:', error);
+        res.status(500).json({ message: 'Failed to delete user message.', error: error.message });
+    }
+}
+
+export async function deleteAllMessage(req, res) {
+    try {
+        const { uid } = req.params;
+
+        // 메시지 컬렉션 경로 정의
+        const collectionPath = `users/${uid}/message`;
+
+        // 모든 문서 가져오기
+        const snapshot = await db.collection(collectionPath).get();
+
+        if (snapshot.empty) {
+            console.log(`No documents found in collection: ${collectionPath}`);
+            return res.status(404).json({ message: `No messages found for user ${uid}` });
+        }
+
+        // 문서 삭제
+        const deletePromises = snapshot.docs.map((doc) =>
+            doc.ref.delete().then(() => console.log(`Deleted document: ${doc.id}`))
+        );
+
+        // 모든 문서 삭제 완료 대기
+        await Promise.all(deletePromises);
+
+        console.log(`Collection ${collectionPath} deleted successfully.`);
+        res.status(200).json({ message: `All messages for user ${uid} deleted successfully.` });
+    } catch (error) {
+        console.error(`Error deleting collection ${collectionPath}:`, error);
+        res.status(500).json({ message: 'Failed to delete messages.', error: error.message });
+    }
+}

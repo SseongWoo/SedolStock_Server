@@ -292,7 +292,7 @@ async function deleteDelistingStock(itemUid, itemType) {
         // 2. 각 tradelist 문서 처리
         for (const doc of tradelistSnapshot.docs) {
             const userId = doc.id; // 문서 이름이 유저 UID
-            const stockCount = doc.data().stockCount || 0; // 기본값 설정
+            const stockCount = doc.data().stockcount || 0; // 기본값 설정
 
             // wallet/stock 문서 참조
             const stockDocRef = db.collection('users').doc(userId).collection('wallet').doc('stock');

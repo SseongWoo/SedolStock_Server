@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { signUpUser, signInUser, resetPassword, changePassword, sendEmail, checkEmail, deleteUserAuth, tokenLogin } from './controllers/authControllers.js';
-import { getUserData, signUpUserData1, signUpUserData2, searchName, updateName, getUserWallet, updateUserTotalMoney, updateChoiceChannel, restartUserData, getUserMessageData } from './controllers/userControllers.js';
+import { getUserData, signUpUserData1, signUpUserData2, searchName, updateName, getUserWallet, updateUserTotalMoney, updateChoiceChannel, restartUserData, getUserMessageData, deleteMessageData, deleteAllMessage } from './controllers/userControllers.js';
 import { getUserTradeDataList, tryTrade } from './controllers/tradeControllers.js';
 import { getChannelIdByName, getChannelInfoData, getVideoData, getLiveData, getLatestVideoInfo } from './controllers/youtubeControllers.js';
 import { getRankData } from './controllers/rankControllers.js'
@@ -110,7 +110,12 @@ apiRouter.put('/users/updatetotalmoney/:uid', updateUserTotalMoney);
 
 apiRouter.put('/fanname/update', updateChoiceChannel);
 
-apiRouter.get('/users/getmessage/:uid', getUserMessageData);
+apiRouter.get('/users/message/:uid', getUserMessageData);
+
+apiRouter.delete('/users/message/:uid', deleteMessageData);
+
+apiRouter.delete('/users/allmessage/:uid', deleteAllMessage);
+
 
 // 서버 실행
 app.listen(PORT, () => {
