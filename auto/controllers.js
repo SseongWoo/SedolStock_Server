@@ -327,8 +327,12 @@ async function deleteDelistingStock(itemUid, itemType) {
             );
         }
 
+        const deletePromises = tradelistSnapshot.docs.map((doc) =>
+            doc.ref.delete().then(() => console.log(`Deleted document: ${doc.id}`))
+        );
+
         // 3. 모든 업데이트 및 메시지 작업 완료 대기
-        await Promise.all(updatePromises);
+        Promise.all([...updatePromises, ...deletePromises])
 
         console.log('All stock documents and messages updated successfully.');
     } catch (error) {
