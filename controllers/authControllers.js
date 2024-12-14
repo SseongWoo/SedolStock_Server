@@ -23,7 +23,10 @@ export async function signInUser(req, res) {
     const { email, password } = req.body;
     try {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        res.status(201).json({ message: 'User signed in', user: userCredential.user });
+
+        const authState = await checkSignUp(userCredential.user.uid);
+
+        res.status(201).json({ message: 'User signed in', user: userCredential.user, state: authState });
     } catch (error) {
         console.error('Error signing in:', error.message);
         res.status(400).json({ message: 'Failed to sign in', error: error.message });
@@ -261,5 +264,44 @@ async function deleteQueryBatch(db, query, resolve, reject) {
         });
     } catch (error) {
         reject(error);
+    }
+}
+
+async function checkSignUp(uid) {
+    try {
+        // Firestore에서 user 문서 가져오기
+        const userDoc = await db.collection('users').doc(uid).get();
+
+        // 문서 존재 여부 확인
+        if (!userDoc.exists) {
+            console.log(`User with UID ${uid} does not exist.`);
+            // 문서가 존재하지 않을경우 0
+            return 0;
+        }
+
+        // 문서 데이터 가져오기
+        const userData = userDoc.data();
+
+        // 필드 값 확인
+        const idField = userData.id || '';
+        const nameFieldExists = 'name' in userData;
+
+        // 조건 확인
+        const isEmail = idField.includes('@'); // id에 @ 포함 여부 확인
+        const hasName = nameFieldExists; // name 필드 존재 여부
+
+        // 회원가입 4단계를 하지 않은 계정일떄 게스트 아이디 일경우 1 반환, 이메일 아이디 일경우 2반환 회원가입을 완료한 계정일경우 3반환
+        if (!hasName) {
+            if (isEmail) {
+                return 'checkemail';
+            } else {
+                return 'setdata';
+            }
+        } else {
+            return '';
+        }
+    } catch (error) {
+        console.error('Error checking user sign-up status:', error);
+        throw error; // 에러를 호출자에게 전달
     }
 }
