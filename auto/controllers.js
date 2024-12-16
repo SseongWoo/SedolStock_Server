@@ -237,7 +237,7 @@ function updatePriceDifferences(countData, channelItem) {
         countData.likeDelisting--;
 
         if (countData.likeDelisting <= 0) {
-            countData.likeCountPrice = 10000;
+            countData.likeCountPrice = 100000;
         }
 
     } else {
