@@ -5,6 +5,7 @@ import { getUserData, signUpUserData1, signUpUserData2, searchName, updateName, 
 import { getUserTradeDataList, tryTrade } from './controllers/tradeControllers.js';
 import { getChannelIdByName, getChannelInfoData, getVideoData, getLiveData, getLatestVideoInfo } from './controllers/youtubeControllers.js';
 import { getRankData } from './controllers/rankControllers.js'
+import { checkRunningServer } from './controllers/severControllers.js'
 
 // Express 애플리케이션 초기화
 const app = express();
@@ -25,9 +26,10 @@ apiRouter.get('/healthcheck', (req, res) => {
 });
 
 // 서버가 열려있는지 확인
-apiRouter.get('/running', (req, res) => {
-    res.status(200).send('Server is running');
-});
+// apiRouter.get('/running', (req, res) => {
+//     res.status(200).send('Server is running');
+// });
+apiRouter.get('/running', checkRunningServer);
 
 // 회원가입 (POST /signup)
 apiRouter.post('/signup', signUpUser);
