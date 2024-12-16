@@ -186,7 +186,7 @@ function initializeCountData(existingData) {
         lastDifferenceViewCount: existingData.differenceViewCount || 0,
         lastDifferenceLikeCount: existingData.differenceLikeCount || 0,
         lastDifferenceCommentCount: existingData.differenceCommentCount || 0,
-        lastViewCountPrice: existingData.viewCountPrice || 10000,
+        lastViewCountPrice: existingData.viewCountPrice || 100000,
         lastLikeCountPrice: existingData.likeCountPrice || 100000,
         lastCommentCountPrice: existingData.commentCountPrice || 10000,
         viewCountPrice: 0,
@@ -221,6 +221,9 @@ function updatePriceDifferences(countData, channelItem) {
     if (countData.viewDelisting > 0) {
         countData.viewCountPrice = 0;
         countData.viewDelisting--;
+        if (countData.viewDelisting <= 0) {
+            countData.viewCountPrice = 100000;
+        }
     } else {
         countData.viewCountPrice += (countData.differenceViewCount * 100) - (countData.lastDifferenceViewCount * 100);
         if (countData.viewCountPrice <= 0) {
@@ -232,6 +235,11 @@ function updatePriceDifferences(countData, channelItem) {
     if (countData.likeDelisting > 0) {
         countData.likeCountPrice = 0;
         countData.likeDelisting--;
+
+        if (countData.likeDelisting <= 0) {
+            countData.likeCountPrice = 10000;
+        }
+
     } else {
         countData.likeCountPrice += (countData.differenceLikeCount * 1000) - (countData.lastDifferenceLikeCount * 1000);
         if (countData.likeCountPrice <= 0) {
@@ -243,6 +251,10 @@ function updatePriceDifferences(countData, channelItem) {
     if (countData.commentDelisting > 0) {
         countData.commentCountPrice = 0;
         countData.commentDelisting--;
+
+        if (countData.commentDelisting <= 0) {
+            countData.commentCountPrice = 10000;
+        }
     } else {
         countData.commentCountPrice += countData.differenceCommentCount - countData.lastDifferenceCommentCount;
         if (countData.commentCountPrice <= 0) {
