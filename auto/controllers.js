@@ -18,7 +18,7 @@ const apiKey = process.env.YOUTUBE_API_KEY;
 const channelIdList = process.env.CHANNEL_ID_LIST ? process.env.CHANNEL_ID_LIST.split(',') : [];
 const delistingTime = 5;
 const packageName = process.env.APP_PACKAGE_NAME;
-const packageAPIKEY = process.env.APP_API_KEY;
+const packageAPIKEY = path.resolve(process.env.APP_API_KEY);
 
 
 // YouTube API 인스턴스를 생성합니다.
