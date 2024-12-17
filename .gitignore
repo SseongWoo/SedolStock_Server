@@ -2,7 +2,7 @@ node_modules
 package-lock.json
 stockprojecttest-10805-firebase-adminsdk-zxjew-e40a0b9e60.json
 stockproject-c98ff-firebase-adminsdk-auevd-c1b9df5bcc.json
-
+stockgameproject-8b276cb8e082.json
 auto/test.js
 .env
-
+version.json

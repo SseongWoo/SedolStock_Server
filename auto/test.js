@@ -1,7 +1,7 @@
 //import { startDeleteUserData } from '../controllers/authControllers.js'
 // import { setRankData } from '../controllers/rankControllers.js'
 // import { google } from 'googleapis';
-import { startDeleteUserData } from "./controllers.js";
+import { getPlayStoreVersion } from "./controllers.js";
 
 // // YouTube API 인스턴스를 생성합니다.
 // const youtube = google.youtube({
@@ -42,4 +42,4 @@ import { startDeleteUserData } from "./controllers.js";
 
 // getChannelIdByName();
 
-startDeleteUserData();
+getPlayStoreVersion();
