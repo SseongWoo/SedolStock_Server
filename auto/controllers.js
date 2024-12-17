@@ -20,6 +20,9 @@ const delistingTime = 5;
 const packageName = process.env.APP_PACKAGE_NAME;
 const packageAPIKEY = path.resolve(process.env.APP_API_KEY);
 
+const viewPercentage = 100;
+const likePercentage = 100;
+
 
 // YouTube API 인스턴스를 생성합니다.
 const youtube = google.youtube({
@@ -229,7 +232,7 @@ function updatePriceDifferences(countData, channelItem) {
             countData.viewCountPrice = 100000;
         }
     } else {
-        countData.viewCountPrice += (countData.differenceViewCount * 100) - (countData.lastDifferenceViewCount * 100);
+        countData.viewCountPrice += (countData.differenceViewCount * viewPercentage) - (countData.lastDifferenceViewCount * viewPercentage);
         if (countData.viewCountPrice <= 0) {
             countData.viewCountPrice = 0;
             countData.viewDelisting = delistingTime;
@@ -245,7 +248,7 @@ function updatePriceDifferences(countData, channelItem) {
         }
 
     } else {
-        countData.likeCountPrice += (countData.differenceLikeCount * 1000) - (countData.lastDifferenceLikeCount * 1000);
+        countData.likeCountPrice += (countData.differenceLikeCount * likePercentage) - (countData.lastDifferenceLikeCount * likePercentage);
         if (countData.likeCountPrice <= 0) {
             countData.likeCountPrice = 0;
             countData.likeDelisting = delistingTime;
