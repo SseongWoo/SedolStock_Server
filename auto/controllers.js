@@ -18,7 +18,7 @@ const apiKey = process.env.YOUTUBE_API_KEY;
 const channelIdList = process.env.CHANNEL_ID_LIST ? process.env.CHANNEL_ID_LIST.split(',') : [];
 const delistingTime = 5;
 const packageName = process.env.APP_PACKAGE_NAME;
-const packageAPIKEY = path.resolve(process.env.APP_API_KEY);
+const packageAPIKEY = path.resolve(__dirname, process.env.APP_API_KEY);
 
 const viewPercentage = 100;
 const likePercentage = 100;
@@ -248,7 +248,7 @@ function updatePriceDifferences(countData, channelItem) {
         }
 
     } else {
-        countData.likeCountPrice += (countData.differenceLikeCount * likePercentage) - (countData.lastDifferenceLikeCount * likePercentage);
+        countData.likeCountPrice += (countData.differenceLikeCount * likePercentage) - (countData.lastDifferenceLikeCount * 100);
         if (countData.likeCountPrice <= 0) {
             countData.likeCountPrice = 0;
             countData.likeDelisting = delistingTime;
