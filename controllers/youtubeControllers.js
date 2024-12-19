@@ -2,6 +2,7 @@ import { google } from 'googleapis';
 import { db } from '../firebase_admin.js';
 import path from 'path';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
 import { getJson } from '../utils/file.js'
 
 // 현재 파일의 디렉터리 이름을 얻기
