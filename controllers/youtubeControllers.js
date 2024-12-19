@@ -67,7 +67,7 @@ export async function getChannelInfoData(req, res) {
         const channelDoc = await getJson('../json/channelInfo.json');
 
         // 데이터 확인
-        if (!doc || Object.keys(doc).length === 0) {
+        if (!channelDoc || Object.keys(channelDoc).length === 0) {
             console.error('No data found in JSON file for "videoList.json".');
             return res.status(404).json({
                 message: 'No channel information found for the requested ID.'
