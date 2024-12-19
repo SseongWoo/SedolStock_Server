@@ -1,9 +1,14 @@
 import { google } from 'googleapis';
 import { db } from '../firebase_admin.js';
+import path from 'path';
 import dotenv from 'dotenv';
 import { getJson } from '../utils/file.js'
 
-dotenv.config({ path: '../.env' });
+// 현재 파일의 디렉터리 이름을 얻기
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const apiKey = process.env.YOUTUBE_API_KEY;
 
 // YouTube API 인스턴스를 생성합니다.
