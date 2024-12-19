@@ -65,8 +65,6 @@ export async function getChannelInfoData(req, res) {
         //     });
         // }
 
-        console.error('getChannelInfoData error : 1');
-
         const channelDoc = await getJson('../json/channelInfo.json');
 
         // 데이터 확인
@@ -103,7 +101,6 @@ export async function getVideoData(req, res) {
         //         message: 'No video data found for the requested ID.'
         //     });
         // }
-        console.error('getVideoData error : 1');
 
         const videoDoc = await getJson('../json/videoList.json');
 
@@ -147,9 +144,6 @@ export async function getLiveData(req, res) {
         // if (!chartDataDoc.exists) {
         //     return res.status(404).json({ message: 'No chart data found in Firestore for document "0_chart"' });
         // }
-
-
-        console.error('getLiveData error : 1');
 
         const countMapData = await getJson('../json/liveData.json');
         const countSubMapData = await getJson('../json/liveSubData.json');
@@ -198,8 +192,6 @@ export async function getLatestVideoInfo(req, res) {
 
         // // 문서 데이터 가져오기
         // const videoData = doc.data();
-
-        console.error('getLatestVideoInfo error : 1');
 
         const videoData = await getJson('../json/videoLatestList.json');
 
