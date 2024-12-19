@@ -565,7 +565,7 @@ export async function setRankData() {
 
         await Promise.all(updatePromises);
 
-        await updateJson('../json/ranking.json', userList);
+        await updateJson('../json/ranking.json', { users: userList, 'updatedate': getDate() });
         const rankingDocRef = db.collection('rank').doc('0ranking');
         await rankingDocRef.set({ users: userList, 'updatedate': getDate() });
 

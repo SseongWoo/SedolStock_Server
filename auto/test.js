@@ -45,4 +45,4 @@ import { getRankData } from "../controllers/rankControllers.js"
 // getChannelIdByName();
 
 
-getRankData();
+setRankData();
