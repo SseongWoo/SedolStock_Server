@@ -12,7 +12,7 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import { google } from 'googleapis';
 import { db } from '../firebase_admin.js';
 import { getDate, getTime, getDayName, newGetTime } from '../utils/date.js';
-import { controllVersionFile } from '../utils/file.js'
+import { controllVersionFile, updateJson, getJson } from '../utils/file.js'
 
 const apiKey = process.env.YOUTUBE_API_KEY;
 const channelIdList = process.env.CHANNEL_ID_LIST ? process.env.CHANNEL_ID_LIST.split(',') : [];
@@ -20,8 +20,8 @@ const delistingTime = 5;
 const packageName = process.env.APP_PACKAGE_NAME;
 const packageAPIKEY = path.resolve(__dirname, process.env.APP_API_KEY);
 
-const viewPercentage = 100;
-const likePercentage = 100;
+const viewPercentage = 100;     // 조회수 배율
+const likePercentage = 1000;     // 좋아요 수 배율
 
 
 // YouTube API 인스턴스를 생성합니다.
@@ -86,6 +86,8 @@ export async function updateChannelInfoData() {
         // Firestore에 저장하기 위해 Map을 순수한 JavaScript 객체로 변환
         const channelDataObject = Object.fromEntries(channelDataMap);
 
+        await updateJson('../json/channelInfo.json', channelDataObject);
+
         await db.collection('youtubechannels').doc('0').set(channelDataObject);
 
         // 응답 전송
@@ -106,28 +108,33 @@ async function saveToFirestore(path, data, options = { merge: true }) {
 // 메인 업데이트 함수
 export async function updateLiveData() {
     try {
-        const [lastDoc, lastSubDoc, chartDataDoc, doc] = await Promise.all([
-            db.collection('youtubelivedata').doc('0').get(),
-            db.collection('youtubelivedata').doc('0_sub').get(),
-            db.collection('youtubelivedata').doc('0_chart').get(),
-            db.collection('youtubevideos').doc('0').get()
-        ]);
+        // JSON 파일 읽기
+        const lastDoc = await getJson('../json/liveData.json');
+        const lastSubDoc = await getJson('../json/liveSubData.json');
+        const chartDataDoc = await getJson('../json/liveChart.json');
+        const doc = await getJson('../json/videoList.json');
 
-        if (!doc.exists) {
-            console.error('No data found in Firestore for document "0"');
+        // 데이터 확인
+        if (!doc || Object.keys(doc).length === 0) {
+            console.error('No data found in JSON file for "videoList.json".');
             return;
         }
 
-        const countMapData = lastDoc.data() || {};
-        const countSubMapData = lastSubDoc.data() || {};
-        const chartDataList = chartDataDoc.data() || {};
-        const channelDataObject = doc.data();
+        const countMapData = lastDoc || {};
+        const countSubMapData = lastSubDoc || {};
+        const chartDataList = chartDataDoc || {};
 
         const videoIdsByChannel = {};
-        Object.keys(channelDataObject).forEach(channelId => {
-            const videoIds = channelDataObject[channelId].map(video => video.videoid);
-            videoIdsByChannel[channelId] = videoIds;
+        Object.keys(doc).forEach(channelId => {
+            const videos = doc[channelId];
+            if (Array.isArray(videos)) {
+                const videoIds = videos.map(video => video.videoid);
+                videoIdsByChannel[channelId] = videoIds;
+            } else {
+                console.warn(`Invalid video data for channel ${channelId}`);
+            }
         });
+        console.log('Processed video IDs by channel:', videoIdsByChannel);
 
         const promises = [];
         const countMap = {};
@@ -168,8 +175,14 @@ export async function updateLiveData() {
 
         await Promise.all(promises);
 
+        console.log(chartDataList);
+        // JSON 데이터 저장
+        await updateJson('../json/liveData.json', countMap);
+        await updateJson('../json/liveSubData.json', subCountMap);
+        await updateJson('../json/liveChart.json', chartDataList);
+
+        // 파이어베이스에 저장
         await saveToFirestore('youtubelivedata/0_chart', chartDataList);
-        //await saveToFirestore(`youtubelivedata/history_chart/${getDate()}/${getTime()}`, chartDataList);
         await saveToFirestore('youtubelivedata/0', countMap);
         await saveToFirestore('youtubelivedata/0_sub', subCountMap);
         await saveToFirestore(`youtubelivedata/history/${getDayName()}/${newGetTime()}`, countMap);
@@ -244,11 +257,11 @@ function updatePriceDifferences(countData, channelItem) {
         countData.likeDelisting--;
 
         if (countData.likeDelisting <= 0) {
-            countData.likeCountPrice = 100000;
+            countData.likeCountPrice = 1000000;
         }
 
     } else {
-        countData.likeCountPrice += (countData.differenceLikeCount * likePercentage) - (countData.lastDifferenceLikeCount * 100);
+        countData.likeCountPrice += (countData.differenceLikeCount * likePercentage) - (countData.lastDifferenceLikeCount * likePercentage);
         if (countData.likeCountPrice <= 0) {
             countData.likeCountPrice = 0;
             countData.likeDelisting = delistingTime;
@@ -362,6 +375,9 @@ async function deleteDelistingStock(itemUid, itemType) {
 
 export async function updateVideoData() {
     try {
+        // 전체 비디오 데이터를 저장할 객체
+        const allVideoData = {};
+
         // 각 채널에 대해 비디오 데이터 가져오기
         const videoPromises = channelIdList.map(async (channelId) => {
             try {
@@ -410,6 +426,9 @@ export async function updateVideoData() {
 
                     // Firestore 배치 실행
                     await batch.commit();
+
+                    // allVideoData 객체에 채널 데이터를 추가
+                    allVideoData[channelId] = videoDataList;
                 }
             } catch (err) {
                 console.error(`Error processing channel ${channelId}:`, err);
@@ -418,6 +437,9 @@ export async function updateVideoData() {
 
         // 모든 채널의 영상 데이터를 병렬로 처리
         await Promise.all(videoPromises);
+
+        // JSON 파일에 최신 비디오 데이터 저장
+        await updateJson('../json/videoList.json', allVideoData);
 
         // 응답 전송
         console.log('Latest 10 videos for each channel have been saved successfully.');
@@ -489,6 +511,7 @@ export async function updateLatestVideoInfo() {
     const videoInfoObject = Object.fromEntries(videoInfoMap);
 
     try {
+        await updateJson('../json/videoLatestList.json', videoInfoObject);
         // Firestore에 데이터 저장 (일괄 저장)
         await db.collection('youtubevideos').doc('0_latest').set(videoInfoObject);
 
@@ -542,6 +565,7 @@ export async function setRankData() {
 
         await Promise.all(updatePromises);
 
+        await updateJson('../json/ranking.json', userList);
         const rankingDocRef = db.collection('rank').doc('0ranking');
         await rankingDocRef.set({ users: userList, 'updatedate': getDate() });
 
@@ -727,45 +751,3 @@ export async function getPlayStoreVersion() {
         throw error;
     }
 }
-
-// async function controllVersionFile(type, versionCode, versionName) {
-//     const jsonPath = path.resolve(__dirname, '../version.json');
-
-//     if (type === 'get') {
-//         // JSON 파일이 존재하는지 확인
-//         if (fs.existsSync(jsonPath)) {
-//             const jsonData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-//             console.log('현재 버전 정보:', jsonData);
-//             return jsonData; // 버전 정보 반환
-//         } else {
-//             console.log('버전 파일이 존재하지 않습니다.');
-//             return null;
-//         }
-//     } else if (type === 'update') {
-//         const initialData = {
-//             versionCode: versionCode || '1.0.0', // 기본 값 설정
-//             versionName: versionName || 'Initial Version',
-//             updatedAt: new Date().toISOString() // 업데이트 시간 추가
-//         };
-
-//         if (!fs.existsSync(jsonPath)) {
-//             // JSON 파일이 없으면 새로 생성
-//             fs.writeFileSync(jsonPath, JSON.stringify(initialData, null, 2), 'utf8');
-//             console.log('JSON 파일이 새로 생성되었습니다:', jsonPath);
-//         } else {
-//             // JSON 파일이 있으면 데이터 업데이트
-//             const existingData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-
-//             // 버전 정보 업데이트
-//             existingData.versionCode = versionCode || existingData.versionCode;
-//             existingData.versionName = versionName || existingData.versionName;
-//             existingData.updatedAt = new Date().toISOString();
-
-//             // 파일 저장
-//             fs.writeFileSync(jsonPath, JSON.stringify(existingData, null, 2), 'utf8');
-//             console.log('JSON 파일이 업데이트되었습니다:', existingData);
-//         }
-//     } else {
-//         console.log('올바른 type 값을 입력해주세요. (get 또는 update)');
-//     }
-// }

@@ -1,6 +1,7 @@
 import { google } from 'googleapis';
 import { db } from '../firebase_admin.js';
 import dotenv from 'dotenv';
+import { getJson } from '../utils/file.js'
 
 dotenv.config({ path: '../.env' });
 const apiKey = process.env.YOUTUBE_API_KEY;
@@ -48,20 +49,31 @@ export async function getChannelIdByName(req, res) {
 
 export async function getChannelInfoData(req, res) {
     try {
-        // Firestore에서 특정 문서(채널 ID '0')에 해당하는 데이터 가져오기
-        const channelDoc = await db.collection('youtubechannels').doc('0').get();
+        // // Firestore에서 특정 문서(채널 ID '0')에 해당하는 데이터 가져오기
+        // const channelDoc = await db.collection('youtubechannels').doc('0').get();
 
-        // 문서가 존재하는지 확인
-        if (!channelDoc.exists) {
+        // // 문서가 존재하는지 확인
+        // if (!channelDoc.exists) {
+        //     return res.status(404).json({
+        //         message: 'No channel information found for the requested ID.'
+        //     });
+        // }
+
+        const channelDoc = await getJson('../json/channelInfo.json');
+
+        // 데이터 확인
+        if (!doc || Object.keys(doc).length === 0) {
+            console.error('No data found in JSON file for "videoList.json".');
             return res.status(404).json({
                 message: 'No channel information found for the requested ID.'
             });
         }
 
+
         // 응답 전송
         return res.status(200).json({
             message: `Channel information retrieved successfully.`,
-            channel: channelDoc.data()
+            channel: channelDoc
         });
 
     } catch (error) {
@@ -74,11 +86,21 @@ export async function getChannelInfoData(req, res) {
 
 export async function getVideoData(req, res) {
     try {
-        // Firestore에서 특정 문서(채널 ID '0')에 해당하는 데이터 가져오기
-        const videoDoc = await db.collection('youtubevideos').doc('0').get();
+        // // Firestore에서 특정 문서(채널 ID '0')에 해당하는 데이터 가져오기
+        // const videoDoc = await db.collection('youtubevideos').doc('0').get();
 
-        // 문서가 존재하는지 확인
-        if (!videoDoc.exists) {
+        // // 문서가 존재하는지 확인
+        // if (!videoDoc.exists) {
+        //     return res.status(404).json({
+        //         message: 'No video data found for the requested ID.'
+        //     });
+        // }
+
+        const videoDoc = await getJson('../json/videoList.json');
+
+        // 데이터 확인
+        if (!videoDoc || Object.keys(videoDoc).length === 0) {
+            console.error('No data found in JSON file for "videoList.json".');
             return res.status(404).json({
                 message: 'No video data found for the requested ID.'
             });
@@ -87,7 +109,7 @@ export async function getVideoData(req, res) {
         // 응답 전송
         return res.status(200).json({
             message: `video data retrieved successfully.`,
-            channel: videoDoc.data()
+            channel: videoDoc
         });
 
     } catch (error) {
@@ -99,27 +121,44 @@ export async function getVideoData(req, res) {
 export async function getLiveData(req, res) {
     try {
         // Firestore에서 데이터 가져오기
-        const lastDoc = await db.collection('youtubelivedata').doc('0').get();
-        const lastSubDoc = await db.collection('youtubelivedata').doc('0_sub').get();
-        const chartDataDoc = await db.collection('youtubelivedata').doc('0_chart').get();
+        // const lastDoc = await db.collection('youtubelivedata').doc('0').get();
+        // const lastSubDoc = await db.collection('youtubelivedata').doc('0_sub').get();
+        // const chartDataDoc = await db.collection('youtubelivedata').doc('0_chart').get();
 
-        // 데이터가 존재하는지 확인
-        if (!lastDoc.exists) {
+
+        // // 데이터가 존재하는지 확인
+        // if (!lastDoc.exists) {
+        //     return res.status(404).json({ message: 'No data found in Firestore for document "0"' });
+        // }
+
+        // if (!lastSubDoc.exists) {
+        //     return res.status(404).json({ message: 'No chart data found in Firestore for document "0_chart"' });
+        // }
+
+        // if (!chartDataDoc.exists) {
+        //     return res.status(404).json({ message: 'No chart data found in Firestore for document "0_chart"' });
+        // }
+
+        const countMapData = await getJson('../json/liveData.json');
+        const countSubMapData = await getJson('../json/liveSubData.json');
+        const chartDataList = await getJson('../json/liveChart.json');
+
+        if (!countMapData || Object.keys(countMapData).length === 0) {
             return res.status(404).json({ message: 'No data found in Firestore for document "0"' });
         }
 
-        if (!lastSubDoc.exists) {
+        if (!countSubMapData || Object.keys(countSubMapData).length === 0) {
             return res.status(404).json({ message: 'No chart data found in Firestore for document "0_chart"' });
         }
 
-        if (!chartDataDoc.exists) {
+        if (!chartDataList || Object.keys(countMapData).length === 0) {
             return res.status(404).json({ message: 'No chart data found in Firestore for document "0_chart"' });
         }
 
         // Firestore에서 가져온 데이터
-        const countMapData = lastDoc.data() || {};
-        const countSubMapData = lastSubDoc.data() || {};
-        const chartDataList = chartDataDoc.data() || {};
+        // const countMapData = lastDoc.data() || {};
+        // const countSubMapData = lastSubDoc.data() || {};
+        // const chartDataList = chartDataDoc.data() || {};
 
         // 응답 전송
         return res.status(200).json({
@@ -135,46 +174,24 @@ export async function getLiveData(req, res) {
     }
 }
 
-
-export async function testFunction(req, res) {
-    //////
-    // 앞에 youtubelivedata - 0 에 있는 데이터들을 먼저 가져온뒤 아래 코드 진행
-    //////
-
-    try {
-        // 직전 데이터 가져오기
-        const lastDoc = await db.collection('youtubelivedata').doc('0').get();
-
-        const countMapData = lastDoc.data();
-
-        console.log(countMapData[channelIdList[0]].totalCommentCount);
-
-        // 응답 전송
-        return res.status(200).json({
-            message: 'All video IDs grouped by channel ID retrieved successfully.',
-            lastCountMap: countMapData
-        });
-
-    } catch (error) {
-        console.error('Error retrieving video IDs by channel ID:', error);
-        return res.status(500).json({ message: 'Error retrieving video IDs by channel ID', error: error.message });
-    }
-}
-
-
-
 export async function getLatestVideoInfo(req, res) {
     try {
-        // Firestore에서 최신 비디오 정보 가져오기
-        const doc = await db.collection('youtubevideos').doc('0_latest').get();
+        // // Firestore에서 최신 비디오 정보 가져오기
+        // const doc = await db.collection('youtubevideos').doc('0_latest').get();
 
-        // 문서가 존재하는지 확인
-        if (!doc.exists) {
+        // // 문서가 존재하는지 확인
+        // if (!doc.exists) {
+        //     return res.status(404).json({ message: 'No latest video data found.' });
+        // }
+
+        // // 문서 데이터 가져오기
+        // const videoData = doc.data();
+
+        const videoData = await getJson('../json/videoLatestList.json');
+
+        if (!videoData || Object.keys(videoData).length === 0) {
             return res.status(404).json({ message: 'No latest video data found.' });
         }
-
-        // 문서 데이터 가져오기
-        const videoData = doc.data();
 
         // JSON 응답 전송
         return res.status(200).json({

@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export async function controllVersionFile(type, versionCode, versionName) {
-    const jsonPath = path.resolve(__dirname, '../version.json');
+    const jsonPath = path.resolve(__dirname, '../json/version.json');
 
     if (type === 'get') {
         // JSON 파일이 존재하는지 확인
@@ -45,5 +45,28 @@ export async function controllVersionFile(type, versionCode, versionName) {
         }
     } else {
         console.log('올바른 type 값을 입력해주세요. (get 또는 update)');
+    }
+}
+
+export async function updateJson(relativePath, newData) {
+    try {
+        const jsonPath = path.resolve(__dirname, relativePath); // 절대 경로 생성
+        const jsonString = JSON.stringify(newData, null, 4); // JSON 데이터를 문자열로 변환 (4칸 들여쓰기)
+        await fs.promises.writeFile(jsonPath, jsonString);; // 파일 쓰기
+        console.log(`JSON file at ${relativePath} updated successfully.`);
+    } catch (error) {
+        console.error(`Error updating JSON file at ${relativePath}:`, error);
+        throw error; // 에러를 호출한 쪽으로 전달
+    }
+}
+
+export async function getJson(relativePath) {
+    try {
+        const jsonPath = path.resolve(__dirname, relativePath); // 절대 경로 생성
+        const fileData = await fs.promises.readFile(jsonPath); // 파일 읽기
+        return JSON.parse(fileData); // JSON 파싱 후 반환
+    } catch (error) {
+        console.error(`Error reading JSON file at ${relativePath}:`, error);
+        throw error; // 에러를 호출한 쪽으로 전달
     }
 }

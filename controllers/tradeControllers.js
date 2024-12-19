@@ -1,5 +1,6 @@
 import { db, FieldValue } from '../firebase_admin.js';
 import { getTime } from '../utils/date.js'
+import { getJson } from '../utils/file.js'
 
 // 사용자 거래 데이터 최대 30일 까지만
 export async function getUserTradeDataList(req, res) {
@@ -254,40 +255,33 @@ async function getUserTradeListData(uid) {
     }
 }
 
-async function getPriceData(channelUID, itemtype) {
+export async function getPriceData(channelUID, itemtype) {
     try {
-        // youtubelivedata 컬렉션에서 문서 '0' 참조
-        const priceDocRef = db.collection('youtubelivedata').doc('0');
+        // JSON 파일에서 데이터를 가져옴
+        const priceData = await getJson('../json/liveData.json');
 
-        // Firestore에서 해당 문서의 데이터를 가져옴
-        const priceDocSnap = await priceDocRef.get();
-
-        if (priceDocSnap.exists) {
-            const priceData = priceDocSnap.data()[channelUID];
-
-            // 데이터가 존재하는지 확인
-            if (!priceData) {
-                console.log(`No data found for channelUID: ${channelUID}`);
-                return null;
-            }
-
-            // itemtype 값에 따른 가격 데이터 반환
-            if (itemtype === 'view') {
-                return priceData.viewCountPrice;
-            } else if (itemtype === 'comment') {
-                return priceData.commentCountPrice;
-            } else if (itemtype === 'like') {
-                return priceData.likeCountPrice;
-            } else {
-                console.log(`Invalid itemtype: ${itemtype}`);
-                return null; // 잘못된 itemtype의 경우 null 반환
-            }
-        } else {
-            console.log("No such document!");
+        // 데이터가 존재하는지 확인
+        if (!priceData || !priceData[channelUID]) {
+            console.log(`No data found for channelUID: ${channelUID}`);
             return null;
         }
+
+        // 채널 데이터 가져오기
+        const channelData = priceData[channelUID];
+
+        // itemtype 값에 따른 가격 데이터 반환
+        if (itemtype === 'view') {
+            return channelData.viewCountPrice;
+        } else if (itemtype === 'comment') {
+            return channelData.commentCountPrice;
+        } else if (itemtype === 'like') {
+            return channelData.likeCountPrice;
+        } else {
+            console.log(`Invalid itemtype: ${itemtype}`);
+            return null; // 잘못된 itemtype의 경우 null 반환
+        }
     } catch (error) {
-        console.error("Error fetching document:", error);
+        console.error("Error fetching data from JSON file:", error);
         return null;
     }
 }
