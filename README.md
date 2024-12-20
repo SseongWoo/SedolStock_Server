@@ -14,13 +14,16 @@
 │   ├── controllers.js          # 자동화 작업을 관리하는 주요 컨트롤러 파일
 │   ├── day.js                  # 하루 단위 데이터 처리 파일
 │   ├── minute.js               # 5분 단위 데이터 처리 파일
+│   ├── minute10.js             # 10분 단위 데이터 처리 파일
 │   └── week.js                 # 주 단위 데이터 처리 파일
-└── controllers                 # API 요청을 처리하는 주요 컨트롤러 폴터
+├── controllers                 # API 요청을 처리하는 주요 컨트롤러 폴터
 │   ├── authControllers.js      # 사용자 인증 및 계정 관리 파일
 │   ├── rankControllers.js      # 사용자 랭킹 데이터 관리 파일
 │   ├── tradeControllers.js     # 거래 관련 데이터 관리 파일
 │   ├── userControllers.js      # 사용자 데이터 관리 파일
 │   └── youtubeControllers.js   # 유튜브 데이터 관리 파일
-utils
-└── date.js                     # 날짜 형식 변환 기능 파일
+├── utils
+│   ├── date.js                 # 날짜 형식 변환 기능 파일
+│   └── file.js                 # json 파일 읽기 쓰기 기능 파일
+└── json                        # json 데이터 파일 폴더
 ```
