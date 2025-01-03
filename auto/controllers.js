@@ -134,7 +134,7 @@ export async function updateLiveData() {
                 console.warn(`Invalid video data for channel ${channelId}`);
             }
         });
-        console.log('Processed video IDs by channel:', videoIdsByChannel);
+        //console.log('Processed video IDs by channel:', videoIdsByChannel);
 
         const promises = [];
         const countMap = {};
@@ -175,7 +175,7 @@ export async function updateLiveData() {
 
         await Promise.all(promises);
 
-        console.log(chartDataList);
+        //console.log(chartDataList);
         // JSON 데이터 저장
         await updateJson('../json/liveData.json', countMap);
         await updateJson('../json/liveSubData.json', subCountMap);
@@ -257,7 +257,7 @@ function updatePriceDifferences(countData, channelItem) {
         countData.likeDelisting--;
 
         if (countData.likeDelisting <= 0) {
-            countData.likeCountPrice = 1000000;
+            countData.likeCountPrice = 100000;
         }
 
     } else {
