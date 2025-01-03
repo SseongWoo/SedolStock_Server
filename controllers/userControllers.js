@@ -8,6 +8,45 @@ const channelIdList = process.env.CHANNEL_ID_LIST.split(',');
 
 const stockType = ['view', 'comment', 'like'];
 
+export async function signUpUserData(req, res) {
+    const { uid, id, firstlogintime, name, choicechannel } = req.body;
+    const money = 1000000;
+
+    try {
+        const userDocRef = db.collection('users').doc(uid);
+        const totalmoneyDocRef = db.collection('users').doc(uid).collection('wallet').doc('totalmoneyhistory');
+
+        // 문서를 지정된 데이터로 저장
+        await userDocRef.set({
+            uid,
+            id,
+            firstlogintime,
+            money,
+            'rank': 0,
+            'totalmoney': money,
+            'beforerank': 0,
+            name,
+            choicechannel,
+        });
+
+        await totalmoneyDocRef.set({
+            totalmoneyhistory: [money],
+            date: getDate(),
+        });
+
+        // 닉네임 중복을 방지하기 위해 닉네임 DB에 닉네임 저장
+        await createName(uid, name);
+
+        // 사용자의 지갑 데이터베이스를 생성
+        await createUserWallet(uid);
+
+        res.status(201).json({ message: 'User Data added successfully', uid: uid });
+    } catch (error) {
+        console.error('Error adding user:', error);
+        res.status(500).json({ message: 'Failed to add user', error: error.message });
+    }
+}
+
 // 회원가입 1
 export async function signUpUserData1(req, res) {
     const { uid, id, firstlogintime } = req.body;
@@ -112,24 +151,89 @@ export async function searchName(req, res) {
         res.status(500).json({ message: 'Failed to get user', error: error.message });
     }
 }
-// // 사용자 삭제
-// export async function deleteUser(req, res) {
-//     const { id } = req.params;
+// // // 사용자 삭제
+export async function deleteUser(req, res) {
+    const { uid } = req.params;
 
-//     try {
-//         // 'users' 컬렉션에서 해당 ID를 가진 문서 참조
-//         const userDocRef = db.collection('users').doc(id);
+    try {
+        await deleteStockCount(uid);
+        // 'trade'와 'wallet' 컬렉션의 하위 문서 삭제
+        await deleteSubcollection(db.collection('users').doc(uid).collection('trade'));
+        await deleteSubcollection(db.collection('users').doc(uid).collection('wallet'));
+        await db.collection('users').doc(uid).delete();
 
-//         // 문서 삭제
-//         await userDocRef.delete();
+        // 성공적으로 삭제된 경우 응답 반환
+        res.status(200).json({ message: `User with ID ${uid} deleted successfully` });
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ message: 'Failed to delete user', error: error.message });
+    }
+}
 
-//         // 성공적으로 삭제된 경우 응답 반환
-//         res.status(200).json({ message: `User with ID ${id} deleted successfully` });
-//     } catch (error) {
-//         console.error('Error deleting user:', error);
-//         res.status(500).json({ message: 'Failed to delete user', error: error.message });
-//     }
-// }
+async function deleteStockCount(uid) {
+    try {
+        // Firestore에서 stock 문서 가져오기
+        const stockDocRef = db.collection('users').doc(uid).collection('wallet').doc('stock');
+        const stockDoc = await stockDocRef.get();
+
+        if (!stockDoc.exists) {
+            console.log('Stock document does not exist for user:', uid);
+            return; // 문서가 없으면 함수 종료
+        }
+
+        // 문서 데이터 가져오기
+        const stockData = stockDoc.data();
+
+        // stockCount > 0인 stockName 필터링
+        const positiveStocks = Object.entries(stockData)
+            .filter(([stockName, stockInfo]) => stockInfo.stockCount > 0) // stockCount 조건
+            .map(([stockName]) => stockName); // stockName만 추출
+
+        if (positiveStocks.length === 0) {
+            console.log(`No stocks to delete for user: ${uid}`);
+            return;
+        }
+
+        console.log(`Deleting stocks for user: ${uid}. Stocks:`, positiveStocks);
+
+        // 병렬 삭제 작업 처리
+        const deletePromises = positiveStocks.map((stockName) => {
+            return db.collection('youtubelivedata')
+                .doc('tradelist')
+                .collection(stockName)
+                .doc(uid)
+                .delete()
+                .then(() => console.log(`Deleted stock ${stockName} for user: ${uid}`))
+                .catch((err) => console.error(`Failed to delete stock ${stockName} for user: ${uid}`, err));
+        });
+
+        // 모든 삭제 작업 완료 대기
+        await Promise.all(deletePromises);
+
+        console.log(`All stocks deleted for user: ${uid}`);
+    } catch (error) {
+        console.error('Error deleting stock data:', error);
+    }
+}
+
+async function deleteSubcollection(collectionRef) {
+    try {
+        const snapshot = await collectionRef.get();
+
+        if (snapshot.empty) {
+            console.log(`No documents in subcollection: ${collectionRef.path}`);
+            return;
+        }
+
+        // 각 문서를 삭제
+        const deletePromises = snapshot.docs.map((doc) => doc.ref.delete());
+        await Promise.all(deletePromises);
+
+        console.log(`Subcollection ${collectionRef.path} deleted successfully.`);
+    } catch (error) {
+        console.error(`Error deleting subcollection ${collectionRef.path}:`, error);
+    }
+}
 
 // 이름 변경 기능 함수
 export async function updateName(req, res) {

@@ -400,11 +400,11 @@ export async function updateVideoData() {
                     });
 
                     const videoDataList = videoResponse.data.items.map((video) => ({
-                        videoid: video.id,
+                        videoUrl: `https://www.youtube.com/watch?v=${video.id}`,
                         title: video.snippet.title,
                         description: video.snippet.description,
-                        thumbnailurl: video.snippet.thumbnails?.medium?.url || '',
-                        publishedat: video.snippet.publishedAt,
+                        thumbnail: video.snippet.thumbnails?.medium?.url || '',
+                        publishedAt: video.snippet.publishedAt,
                     }));
 
                     // Firestore에 병렬로 저장

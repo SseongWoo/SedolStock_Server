@@ -1,7 +1,7 @@
 //import { startDeleteUserData } from '../controllers/authControllers.js'
 // import { setRankData } from '../controllers/rankControllers.js'
 // import { google } from 'googleapis';
-import { setRankData } from "./controllers.js";
+import { updateVideoData } from "./controllers.js";
 import { getLatestVideoInfo } from "../controllers/youtubeControllers.js"
 import { getRankData } from "../controllers/rankControllers.js"
 
@@ -45,4 +45,4 @@ import { getRankData } from "../controllers/rankControllers.js"
 // getChannelIdByName();
 
 
-setRankData();
+updateVideoData();

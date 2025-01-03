@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { signUpUser, signInUser, resetPassword, changePassword, sendEmail, checkEmail, deleteUserAuth, tokenLogin } from './controllers/authControllers.js';
-import { getUserData, signUpUserData1, signUpUserData2, searchName, updateName, getUserWallet, updateUserTotalMoney, updateChoiceChannel, restartUserData, getUserMessageData, deleteMessageData, deleteAllMessage } from './controllers/userControllers.js';
+import { getUserData, signUpUserData1, signUpUserData2, searchName, updateName, getUserWallet, updateUserTotalMoney, updateChoiceChannel, restartUserData, getUserMessageData, deleteMessageData, deleteAllMessage, deleteUser, signUpUserData } from './controllers/userControllers.js';
 import { getUserTradeDataList, tryTrade } from './controllers/tradeControllers.js';
 import { getChannelIdByName, getChannelInfoData, getVideoData, getLiveData, getLatestVideoInfo } from './controllers/youtubeControllers.js';
 import { getRankData } from './controllers/rankControllers.js'
@@ -44,6 +44,9 @@ apiRouter.post('/signin/tokenlogin', tokenLogin);
 apiRouter.delete('/deleteUser', deleteUserAuth);
 
 // 사용자 데이터 등록 (POST /users)
+apiRouter.post('/signup/users', signUpUserData);
+
+// 사용자 데이터 등록 (POST /users)
 apiRouter.post('/users', signUpUserData1);
 
 // 사용자 데이터 업데이트 (PUT /users/:id)
@@ -61,7 +64,7 @@ apiRouter.get('/names/:name', searchName);
 apiRouter.put('/names/update', updateName);
 
 // // 사용자 데이터 삭제 (DELETE /users/:id)
-// apiRouter.delete('/users/:id', deleteUser);
+apiRouter.delete('/users/:id', deleteUser);
 
 // 사용자 데이터 가져오기 (GET /users/:uid)
 apiRouter.get('/users/:uid', getUserData);
