@@ -145,7 +145,7 @@ export async function updateLiveData() {
             }
         }
 
-        console.log('Extracted Video IDs:', videoIdsByChannel);
+        // console.log('Extracted Video IDs:', videoIdsByChannel);
 
         const promises = [];
         const countMap = {};
@@ -171,7 +171,7 @@ export async function updateLiveData() {
                 countMap[channelItem] = initializeCountData(existingData);
                 subCountMap[subChannelItem] = initializeCountData(subExistingData);
 
-                console.log((response.data.items));
+                //console.log((response.data.items));
                 aggregateStatistics(response.data.items, countMap[channelItem]);
                 aggregateStatistics(subResponse.data.items, subCountMap[subChannelItem]);
 
