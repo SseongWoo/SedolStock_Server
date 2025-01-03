@@ -112,29 +112,40 @@ export async function updateLiveData() {
         const lastDoc = await getJson('../json/liveData.json');
         const lastSubDoc = await getJson('../json/liveSubData.json');
         const chartDataDoc = await getJson('../json/liveChart.json');
-        const doc = await getJson('../json/videoList.json');
+        const videoListDoc = await getJson('../json/videoList.json');
 
         // 데이터 확인
-        if (!doc || Object.keys(doc).length === 0) {
+        if (!videoListDoc || Object.keys(videoListDoc).length === 0) {
             console.error('No data found in JSON file for "videoList.json".');
             return;
         }
 
+        // 데이터 초기화
         const countMapData = lastDoc || {};
         const countSubMapData = lastSubDoc || {};
         const chartDataList = chartDataDoc || {};
 
+        // 비디오 ID 추출
         const videoIdsByChannel = {};
-        Object.keys(doc).forEach(channelId => {
-            const videos = doc[channelId];
+
+        for (const [channelId, videos] of Object.entries(videoListDoc)) {
             if (Array.isArray(videos)) {
-                const videoIds = videos.map(video => video.videoid);
-                videoIdsByChannel[channelId] = videoIds;
+                videoIdsByChannel[channelId] = videos
+                    .map(video => {
+                        const videoUrl = video?.videoUrl;
+                        if (videoUrl) {
+                            const videoIdMatch = videoUrl.match(/v=([^&]+)/);
+                            return videoIdMatch ? videoIdMatch[1] : null;
+                        }
+                        return null;
+                    })
+                    .filter(id => id !== null); // null 값 제거
             } else {
                 console.warn(`Invalid video data for channel ${channelId}`);
             }
-        });
-        //console.log('Processed video IDs by channel:', videoIdsByChannel);
+        }
+
+        console.log('Extracted Video IDs:', videoIdsByChannel);
 
         const promises = [];
         const countMap = {};
@@ -149,7 +160,6 @@ export async function updateLiveData() {
                 const videoIds = videoIdsByChannel[channelItem]?.join(',');
                 const subVideoIds = videoIdsByChannel[subChannelItem]?.join(',');
                 if (!videoIds || !subVideoIds) return;
-
                 const [response, subResponse] = await Promise.all([
                     youtube.videos.list({ id: videoIds, part: 'statistics' }),
                     youtube.videos.list({ id: subVideoIds, part: 'statistics' })
@@ -161,32 +171,30 @@ export async function updateLiveData() {
                 countMap[channelItem] = initializeCountData(existingData);
                 subCountMap[subChannelItem] = initializeCountData(subExistingData);
 
+                console.log((response.data.items));
                 aggregateStatistics(response.data.items, countMap[channelItem]);
                 aggregateStatistics(subResponse.data.items, subCountMap[subChannelItem]);
 
                 updateCountDifferences(countMap[channelItem], subCountMap[subChannelItem]);
-
                 updatePriceDifferences(countMap[channelItem], channelItem);
-
                 updateChartDataList(chartDataList, channelItem, countMap[channelItem]);
-
             })().catch(error => console.error(`Error fetching data for channel ${channelItem}:`, error)));
         }
 
+        // 모든 프로미스 대기
         await Promise.all(promises);
 
-        //console.log(chartDataList);
         // JSON 데이터 저장
         await updateJson('../json/liveData.json', countMap);
         await updateJson('../json/liveSubData.json', subCountMap);
         await updateJson('../json/liveChart.json', chartDataList);
 
         // 파이어베이스에 저장
-        await saveToFirestore('youtubelivedata/0_chart', chartDataList);
-        await saveToFirestore('youtubelivedata/0', countMap);
-        await saveToFirestore('youtubelivedata/0_sub', subCountMap);
-        await saveToFirestore(`youtubelivedata/history/${getDayName()}/${newGetTime()}`, countMap);
-        await saveToFirestore(`youtubelivedata/history_sub/${getDayName()}/${newGetTime()}`, subCountMap);
+        await saveToFirestore('youtubelivedata/0_chart', JSON.parse(JSON.stringify(chartDataList)));
+        await saveToFirestore('youtubelivedata/0', JSON.parse(JSON.stringify(countMap)));
+        await saveToFirestore('youtubelivedata/0_sub', JSON.parse(JSON.stringify(subCountMap)));
+        await saveToFirestore(`youtubelivedata/history/${getDayName()}/${newGetTime()}`, JSON.parse(JSON.stringify(countMap)));
+        await saveToFirestore(`youtubelivedata/history_sub/${getDayName()}/${newGetTime()}`, JSON.parse(JSON.stringify(subCountMap)));
 
         console.log('All video IDs grouped by channel ID retrieved successfully.');
     } catch (error) {
