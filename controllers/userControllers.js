@@ -31,7 +31,7 @@ export async function signUpUserData(req, res) {
         });
 
         await totalmoneyDocRef.set({
-            totalmoneyhistory: [{ currentMoney: money, date: date }],
+            totalmoneyhistory: [{ money: money, date: date }],
             date: date,
         });
 
@@ -70,7 +70,7 @@ export async function signUpUserData1(req, res) {
         });
 
         await totalmoneyDocRef.set({
-            totalmoneyhistory: [{ totalmoneyhistory: money, date }],
+            totalmoneyhistory: [{ money, date }],
             date: date,
         });
 
@@ -437,7 +437,7 @@ async function updateUserTotalMoneyHistory(uid, totalmoney) {
         } else {
             // 문서가 존재하지 않는 경우 새로 생성하여 삽입
             await totalmoneyDocRef.set({
-                totalmoneyhistory: [{ currentMoney, date: currentDate }],
+                totalmoneyhistory: [{ money: currentMoney, date: currentDate }],
                 date: currentDate
             });
         }
@@ -470,7 +470,7 @@ export async function restartUserData(req, res) {
 
         // totalmoneyhistory에 초기 데이터 삽입
         await totalmoneyDocRef.set({
-            totalmoneyhistory: [{ currentMoney: initialMoney, date: date }],
+            totalmoneyhistory: [{ money: initialMoney, date: date }],
             date: date,
         });
 
