@@ -31,7 +31,7 @@ export async function signUpUserData(req, res) {
         });
 
         await totalmoneyDocRef.set({
-            totalmoneyhistory: { currentMoney: money, date: date },
+            totalmoneyhistory: [{ currentMoney: money, date: date }],
             date: date,
         });
 
@@ -70,7 +70,7 @@ export async function signUpUserData1(req, res) {
         });
 
         await totalmoneyDocRef.set({
-            totalmoneyhistory: { totalmoneyhistory: money, date },
+            totalmoneyhistory: [{ totalmoneyhistory: money, date }],
             date: date,
         });
 
@@ -470,7 +470,7 @@ export async function restartUserData(req, res) {
 
         // totalmoneyhistory에 초기 데이터 삽입
         await totalmoneyDocRef.set({
-            totalmoneyhistory: { currentMoney: initialMoney, date: date },
+            totalmoneyhistory: [{ currentMoney: initialMoney, date: date }],
             date: date,
         });
 
