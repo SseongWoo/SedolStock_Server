@@ -427,7 +427,7 @@ async function updateUserTotalMoneyHistory(uid, totalmoney) {
             }
 
             // 새로운 항목 추가
-            historyData.push({ currentMoney, date: currentDate });
+            historyData.push({ money: currentMoney, date: currentDate });
 
             // Firestore에 업데이트
             await totalmoneyDocRef.update({
