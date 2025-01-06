@@ -4,7 +4,6 @@ import { controllVersionFile } from '../utils/file.js'
 export async function checkRunningServer(req, res) {
     //const version = await checkVersion();
     const version = await controllVersionFile('get');
-    console.log(version);
     res.status(200).send({ message: 'Server is running', version: version });
 }
 

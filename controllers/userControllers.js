@@ -15,6 +15,7 @@ export async function signUpUserData(req, res) {
     try {
         const userDocRef = db.collection('users').doc(uid);
         const totalmoneyDocRef = db.collection('users').doc(uid).collection('wallet').doc('totalmoneyhistory');
+        const date = getDate();
 
         // 문서를 지정된 데이터로 저장
         await userDocRef.set({
@@ -30,8 +31,8 @@ export async function signUpUserData(req, res) {
         });
 
         await totalmoneyDocRef.set({
-            totalmoneyhistory: [money],
-            date: getDate(),
+            totalmoneyhistory: { currentMoney: money, date: date },
+            date: date,
         });
 
         // 닉네임 중복을 방지하기 위해 닉네임 DB에 닉네임 저장
@@ -55,6 +56,7 @@ export async function signUpUserData1(req, res) {
     try {
         const userDocRef = db.collection('users').doc(uid);
         const totalmoneyDocRef = db.collection('users').doc(uid).collection('wallet').doc('totalmoneyhistory');
+        const date = getDate();
 
         // 문서를 지정된 데이터로 저장
         await userDocRef.set({
@@ -68,8 +70,8 @@ export async function signUpUserData1(req, res) {
         });
 
         await totalmoneyDocRef.set({
-            totalmoneyhistory: [money],
-            date: getDate(),
+            totalmoneyhistory: { totalmoneyhistory: money, date },
+            date: date,
         });
 
         res.status(201).json({ message: 'User Data added successfully', uid: uid });
@@ -405,13 +407,12 @@ async function updateUserTotalMoneyHistory(uid, totalmoney) {
     try {
         // Firestore 참조 생성
         const totalmoneyDocRef = db.collection('users').doc(uid).collection('wallet').doc('totalmoneyhistory');
-        const totalmoneylogDocRef = db.collection('users').doc(uid).collection('wallet').doc(getDate());
 
         // 현재 날짜 가져오기
         const currentDate = getDate(); // 날짜를 YYYY-MM-DD 형식으로 반환
         const currentMoney = parseInt(totalmoney, 10); // totalmoney를 정수형으로 변환
 
-        // totalMoneyHistory 문서 가져오기
+        // Firestore에서 문서 가져오기
         const totalmoneyDocSnap = await totalmoneyDocRef.get();
 
         if (totalmoneyDocSnap.exists) {
@@ -421,34 +422,31 @@ async function updateUserTotalMoneyHistory(uid, totalmoney) {
 
             // 기존 날짜가 현재 날짜와 같은지 확인
             if (dateData === currentDate) {
-                // 날짜가 같다면 최신 아이템을 삭제하고 새로운 totalmoney 삽입
+                // 날짜가 같다면 최신 항목을 삭제하고 새로운 totalmoney 삽입
                 historyData.pop();
             }
 
             // 새로운 항목 추가
-            historyData.push(currentMoney);
-            dateData = currentDate;
+            historyData.push({ currentMoney, date: currentDate });
 
             // Firestore에 업데이트
             await totalmoneyDocRef.update({
                 totalmoneyhistory: historyData,
-                date: dateData
+                date: currentDate
             });
         } else {
             // 문서가 존재하지 않는 경우 새로 생성하여 삽입
             await totalmoneyDocRef.set({
-                totalmoneyhistory: [currentMoney],
+                totalmoneyhistory: [{ currentMoney, date: currentDate }],
                 date: currentDate
             });
         }
 
-        // totalmoneylogDocRef의 데이터 업데이트
-        await totalmoneylogDocRef.set({ totalmoney: currentMoney }, { merge: true });
+        console.log("User total money history updated successfully.");
     } catch (error) {
         console.error("Error updating user total money:", error);
     }
 }
-
 export async function restartUserData(req, res) {
     const { uid } = req.body;
     const initialMoney = 1000000; // 초기 자산
@@ -456,6 +454,7 @@ export async function restartUserData(req, res) {
     try {
         const userDocRef = db.collection('users').doc(uid);
         const totalmoneyDocRef = db.collection('users').doc(uid).collection('wallet').doc('totalmoneyhistory');
+        const date = getDate();
 
         // 거래 데이터 삭제
         await db.collection('users').doc(uid).collection('trade').doc('0').delete();
@@ -471,8 +470,8 @@ export async function restartUserData(req, res) {
 
         // totalmoneyhistory에 초기 데이터 삽입
         await totalmoneyDocRef.set({
-            totalmoneyhistory: [initialMoney],
-            date: getDate(),
+            totalmoneyhistory: { currentMoney: initialMoney, date: date },
+            date: date,
         });
 
         // 사용자 지갑 생성
