@@ -7,6 +7,13 @@ export async function checkRunningServer(req, res) {
     res.status(200).send({ message: 'Server is running', version: version });
 }
 
+export async function getConstantsData(req, res) {
+    //const version = await checkVersion();
+    // const version = await controllVersionFile('get');
+    // res.status(200).send({ message: 'Server is running', version: version });
+}
+
+
 // async function checkVersion() {
 //     try {
 //         // Firestore에서 문서 가져오기

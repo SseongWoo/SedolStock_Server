@@ -54,11 +54,18 @@ export async function tryTrade(req, res) {
         return res.status(403).json({ message: '무결성 오류 : 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.' });
     }
 
-    let fee = Math.round((itemprice * itemcount) * feeRate);
+
+
+    const totalPrice = itemprice * itemcount;
+    const fee = Math.round(totalPrice * feeRate);
+
+    console.log('itemprice = ' + itemprice + 'fee = ' + fee + 'totalPrice = ' + totalPrice);
+
     // 거래 유형에 따른 계산 처리
     if (type === 'buy') {
-        if (moneybefore >= (itemprice * itemcount) + fee) {
-            moneyafter = Math.round(moneybefore - (itemprice * itemcount) + fee);
+        const totalCost = (itemprice * itemcount) + fee;
+        if (moneybefore >= totalCost) {
+            moneyafter = Math.round(moneybefore - totalCost);
         } else {
             console.error("오류 : 사용자의 보유 재산을 넘는 요청입니다.");
             return res.status(403).json({ message: '오류 : 사용자의 보유 재산을 넘는 요청입니다.' });
