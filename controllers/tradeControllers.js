@@ -59,8 +59,6 @@ export async function tryTrade(req, res) {
     const totalPrice = itemprice * itemcount;
     const fee = Math.round(totalPrice * feeRate);
 
-    console.log('itemprice = ' + itemprice + 'fee = ' + fee + 'totalPrice = ' + totalPrice);
-
     // 거래 유형에 따른 계산 처리
     if (type === 'buy') {
         const totalCost = (itemprice * itemcount) + fee;
@@ -165,7 +163,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
             let typeList = userTradeDocSnap.data().type || [];
             let priceAvgList = userTradeDocSnap.data().priceavg || [];
 
-            console.log(moneyAfterList);
+            //console.log(moneyAfterList);
 
             // 거래 리스트가 50개를 초과할 경우 가장 오래된 항목 제거
             if (moneyBeforeList.length >= 100) {
@@ -378,7 +376,7 @@ async function updateUserWallet(uid, stockName, stockCount, stockPrice, tradeTyp
                     [keyToUpdate]: updatedData
                 });
 
-                console.log(`User wallet updated successfully for key: ${keyToUpdate}`);
+                //console.log(`User wallet updated successfully for key: ${keyToUpdate}`);
             } else {
                 console.log(`No matching key found with stockName: ${stockName}`);
             }
@@ -403,7 +401,7 @@ async function updateUserMoney(uid, money) {
             await moneyDocRef.update({
                 'money': money
             });
-            console.log(`User's money updated successfully for uid: ${uid}`);
+            //console.log(`User's money updated successfully for uid: ${uid}`);
         } else {
             // 문서가 존재하지 않으면 새로 생성
             await moneyDocRef.set({
@@ -429,7 +427,7 @@ async function setStockCount(itemUid, itemType, uid, count, type) {
                 { stockcount: FieldValue.increment(count) },
                 { merge: true }
             );
-            console.log(`Document at ${docRef.path} updated (stockcount incremented by ${count})`);
+            //console.log(`Document at ${docRef.path} updated (stockcount incremented by ${count})`);
         } else {
             // 'sell'과 같은 경우 stockcount 감소 후 조건에 따라 삭제
             await db.runTransaction(async (transaction) => {
@@ -446,11 +444,11 @@ async function setStockCount(itemUid, itemType, uid, count, type) {
                 if (newStockCount <= 0) {
                     // stockcount가 0 이하라면 문서 삭제
                     transaction.delete(docRef);
-                    console.log(`Document at ${docRef.path} deleted (stockcount reached 0 or below)`);
+                    //console.log(`Document at ${docRef.path} deleted (stockcount reached 0 or below)`);
                 } else {
                     // stockcount를 감소
                     transaction.update(docRef, { stockcount: FieldValue.increment(-count) });
-                    console.log(`Document at ${docRef.path} updated (stockcount decremented by ${count})`);
+                    //console.log(`Document at ${docRef.path} updated (stockcount decremented by ${count})`);
                 }
             });
         }
