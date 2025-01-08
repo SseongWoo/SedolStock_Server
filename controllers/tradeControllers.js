@@ -1,6 +1,7 @@
 import { db, FieldValue } from '../firebase_admin.js';
 import { getTime } from '../utils/date.js'
 import { getJson } from '../utils/file.js'
+import { Config } from '../config.js';
 
 // 사용자 거래 데이터 최대 30일 까지만
 export async function getUserTradeDataList(req, res) {
@@ -31,7 +32,7 @@ export async function tryTrade(req, res) {
     const { uid } = req.params; // 사용자 ID
     const { itemuid, itemtype, itemcount, transactionprice, type, priceavg } = req.body; // 요청 본문에서 거래 정보 가져오기
 
-    console.log("priceavg: ", priceavg); // 거래 전, 로그 추가
+    //console.log("priceavg: ", priceavg); // 거래 전, 로그 추가
 
     // Firebase Firestore 경로 설정
     //const userTradeDocRef = db.collection('users').doc(uid).collection('trade').doc(getTime());
@@ -42,7 +43,6 @@ export async function tryTrade(req, res) {
     const moneybefore = await getUserMoneyData(uid);
     const tradetime = new Date().toISOString(); // 시간은 ISO 문자열로 저장
     let moneyafter = 0;
-    const feeRate = 0.05;
     // 데이터가 없을 경우의 오류 처리
     if (itemprice === null || moneybefore === null) {
         return res.status(500).json({ message: '가격 데이터를 불러오는데 실패하였습니다.' });
@@ -54,6 +54,13 @@ export async function tryTrade(req, res) {
         return res.status(403).json({ message: '무결성 오류 : 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.' });
     }
 
+    let feeRate = 0.0;
+
+    if (type === 'buy') {
+        feeRate = Config.FEE_CONFIG.buyFeeRate;
+    } else {
+        feeRate = Config.FEE_CONFIG.sellFeeRate;
+    }
 
 
     const totalPrice = itemprice * itemcount;
@@ -69,7 +76,8 @@ export async function tryTrade(req, res) {
             return res.status(403).json({ message: '오류 : 사용자의 보유 재산을 넘는 요청입니다.' });
         }
     } else if (type === 'sell') {
-        moneyafter = moneybefore + (itemprice * itemcount);
+        const totalRevenue = (itemprice * itemcount) - fee;
+        moneyafter = moneybefore + totalRevenue;
     } else {
         console.error("오류 : 잘못된 인수로 요청되었습니다.");
         return res.status(403).json({ message: '오류 : 잘못된 인수로 요청되었습니다.' });
