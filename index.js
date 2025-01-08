@@ -121,7 +121,7 @@ apiRouter.delete('/users/message/:uid', deleteMessageData);
 
 apiRouter.delete('/users/allmessage/:uid', deleteAllMessage);
 
-apiRouter.get('/constants', getConstantsData);
+apiRouter.get('/config', getConstantsData);
 // 서버 실행
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
