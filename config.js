@@ -1,7 +1,7 @@
 export class Config {
     static FEE_CONFIG = {
-        buyFeeRate: 0.025,
-        sellFeeRate: 0.025,
+        buyFeeRate: 0.02,
+        sellFeeRate: 0.02,
     };
     static PERCENT_CONFIG = {
         delistingTime: 5,      // 상장폐지 기간
