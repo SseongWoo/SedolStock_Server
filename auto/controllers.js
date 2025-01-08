@@ -13,15 +13,18 @@ import { google } from 'googleapis';
 import { db } from '../firebase_admin.js';
 import { getDate, getTime, getDayName, newGetTime } from '../utils/date.js';
 import { controllVersionFile, updateJson, getJson } from '../utils/file.js'
+import { Config } from '../config.js';
 
 const apiKey = process.env.YOUTUBE_API_KEY;
 const channelIdList = process.env.CHANNEL_ID_LIST ? process.env.CHANNEL_ID_LIST.split(',') : [];
-const delistingTime = 5;
 const packageName = process.env.APP_PACKAGE_NAME;
 const packageAPIKEY = path.resolve(__dirname, process.env.APP_API_KEY);
 
-const viewPercentage = 100;     // 조회수 배율
-const likePercentage = 1000;     // 좋아요 수 배율
+const delistingTime = Config.PERCENT_CONFIG.delistingTime;       // 상장폐지 기간
+const viewPercentage = Config.PERCENT_CONFIG.viewPercentage;     // 조회수 배율
+const likePercentage = Config.PERCENT_CONFIG.likePercentage;     // 좋아요 수 배율
+const viewFirstPrice = Config.PERCENT_CONFIG.viewFirstPrice;
+const likeFirstPrice = Config.PERCENT_CONFIG.likeFirstPrice;
 
 
 // YouTube API 인스턴스를 생성합니다.
@@ -214,8 +217,8 @@ function initializeCountData(existingData) {
         lastDifferenceViewCount: existingData.differenceViewCount || 0,
         lastDifferenceLikeCount: existingData.differenceLikeCount || 0,
         lastDifferenceCommentCount: existingData.differenceCommentCount || 0,
-        lastViewCountPrice: existingData.viewCountPrice || 100000,
-        lastLikeCountPrice: existingData.likeCountPrice || 100000,
+        lastViewCountPrice: existingData.viewCountPrice || viewFirstPrice,
+        lastLikeCountPrice: existingData.likeCountPrice || likeFirstPrice,
         lastCommentCountPrice: existingData.commentCountPrice || 10000,
         viewCountPrice: 0,
         likeCountPrice: 0,
@@ -250,7 +253,7 @@ function updatePriceDifferences(countData, channelItem) {
         countData.viewCountPrice = 0;
         countData.viewDelisting--;
         if (countData.viewDelisting <= 0) {
-            countData.viewCountPrice = 100000;
+            countData.viewCountPrice = viewFirstPrice;
         }
     } else {
         countData.viewCountPrice += (countData.differenceViewCount * viewPercentage) - (countData.lastDifferenceViewCount * viewPercentage);
@@ -265,7 +268,7 @@ function updatePriceDifferences(countData, channelItem) {
         countData.likeDelisting--;
 
         if (countData.likeDelisting <= 0) {
-            countData.likeCountPrice = 100000;
+            countData.likeCountPrice = likeFirstPrice;
         }
 
     } else {

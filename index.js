@@ -5,7 +5,7 @@ import { getUserData, signUpUserData1, signUpUserData2, searchName, updateName, 
 import { getUserTradeDataList, tryTrade } from './controllers/tradeControllers.js';
 import { getChannelIdByName, getChannelInfoData, getVideoData, getLiveData, getLatestVideoInfo } from './controllers/youtubeControllers.js';
 import { getRankData } from './controllers/rankControllers.js'
-import { checkRunningServer } from './controllers/severControllers.js'
+import { checkRunningServer, getConstantsData } from './controllers/severControllers.js'
 
 // Express 애플리케이션 초기화
 const app = express();
@@ -121,7 +121,7 @@ apiRouter.delete('/users/message/:uid', deleteMessageData);
 
 apiRouter.delete('/users/allmessage/:uid', deleteAllMessage);
 
-
+apiRouter.get('/constants', getConstantsData);
 // 서버 실행
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
