@@ -10,6 +10,7 @@
 ├── index.js                    # 애플리케이션 초기화 및 라우터 연결 설정 메인파일
 ├── firebase.js                 # Firebase 서비스 설정 파일
 ├── firebase_admin.js           # 인증, Firestore 데이터베이스 기능을 사용하기 위한 Firebase Admin SDK 설정 파일
+├── config.js                   # 서버 주요 설정값 파일
 ├──auto                         # AWS EC2 에서 스케줄러로 사용할 폴더
 │   ├── controllers.js          # 자동화 작업을 관리하는 주요 컨트롤러 파일
 │   ├── day.js                  # 하루 단위 데이터 처리 파일
@@ -18,6 +19,7 @@
 │   └── week.js                 # 주 단위 데이터 처리 파일
 ├── controllers                 # API 요청을 처리하는 주요 컨트롤러 폴터
 │   ├── authControllers.js      # 사용자 인증 및 계정 관리 파일
+│   ├── serverControllers.js    # 서버 상태 확인 및 주요 설정값 데이터 관리 파일
 │   ├── rankControllers.js      # 사용자 랭킹 데이터 관리 파일
 │   ├── tradeControllers.js     # 거래 관련 데이터 관리 파일
 │   ├── userControllers.js      # 사용자 데이터 관리 파일
