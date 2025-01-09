@@ -25,10 +25,7 @@ apiRouter.get('/healthcheck', (req, res) => {
     res.status(200).send('OK');
 });
 
-// 서버가 열려있는지 확인
-// apiRouter.get('/running', (req, res) => {
-//     res.status(200).send('Server is running');
-// });
+// 서버 상태 확인 및 버전 요청
 apiRouter.get('/running', checkRunningServer);
 
 // 회원가입 (POST /signup)
@@ -58,8 +55,6 @@ apiRouter.put('/users/restart', restartUserData);
 // 사용자 이름으로 검색 (GET /names/:name)
 apiRouter.get('/names/:name', searchName);
 
-//apiRouter.post('/users/setprofile/:uid', setUserProfile);
-
 // 사용자 이름 업데이트 (PUT /names/:name)
 apiRouter.put('/names/update', updateName);
 
@@ -87,41 +82,45 @@ apiRouter.post('/users/checkemail', checkEmail);
 // 유튜브 채널 이름으로 UID 획득 (POST /youtube/getchannelid)
 apiRouter.post('/youtube/getchannelid', getChannelIdByName);
 
-//apiRouter.post('/youtube/updatechannelinfo', updateChannelInfoData);
-
+// 채널 데이터 요청
 apiRouter.get('/youtube/getchannelinfo', getChannelInfoData);
 
-//apiRouter.post('/youtube/updatevideodata', updateVideoData);
-
+// 비디오 데이터 요청
 apiRouter.get('/youtube/getvideodata', getVideoData);
 
-//apiRouter.post('/youtube/updatelivedata', updateLiveData);
-
+// 채널 가격 데이터 요청
 apiRouter.get('/youtube/getlivedata', getLiveData);
 
-//apiRouter.post('/youtube/updateLatestVideoInfo', updateLatestVideoInfo);
-
+// 최근 영상 데이터 요청
 apiRouter.get('/youtube/getLatestVideoInfo', getLatestVideoInfo);
 
+// 사용자의 지갑 데이터 요청
 apiRouter.get('/users/wallet/:uid', getUserWallet);
 
+// 사용자의 거래 내역 요청
 apiRouter.get('/users/tradeList/:uid', getUserTradeDataList);
 
-//apiRouter.post('/rank/set', setRankData);
-
+// 랭킹 데이터 요청
 apiRouter.get('/rank/get', getRankData);
 
+// 사용자의 보유 자산 업데이트
 apiRouter.put('/users/updatetotalmoney/:uid', updateUserTotalMoney);
 
+// 팬덤 업데이트
 apiRouter.put('/fanname/update', updateChoiceChannel);
 
+// 사용자의 메세지 요청
 apiRouter.get('/users/message/:uid', getUserMessageData);
 
+// 사용자의 메세지 삭제 요청
 apiRouter.delete('/users/message/:uid', deleteMessageData);
 
+// 사용자의 전체 메세지 삭제 요청
 apiRouter.delete('/users/allmessage/:uid', deleteAllMessage);
 
+// 서버의 설정값 요청
 apiRouter.get('/config', getConstantsData);
+
 // 서버 실행
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
