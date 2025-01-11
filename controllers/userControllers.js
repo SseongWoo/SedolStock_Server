@@ -333,9 +333,18 @@ export async function getUserWallet(req, res) {
         const userMoneyHistoryDocSnap = await userMoneyHisotryDocRef.get();
 
         // 문서가 존재하는지 확인
-        if (userDocSnap.exists && userMoneyHistoryDocSnap.exists) {
-            res.status(200).json({ message: 'User retrieved successfully', data: userDocSnap.data(), moneyhistory: userMoneyHistoryDocSnap.data() });
+        if (userMoneyHistoryDocSnap.exists) {
+            // userDocSnap이 존재하는 경우에만 walletData를 가져옴
+            const walletData = userDocSnap.exists ? userDocSnap.data() : {};
+
+            // 성공적으로 사용자 데이터를 반환
+            res.status(200).json({
+                message: 'User retrieved successfully',
+                data: walletData,
+                moneyhistory: userMoneyHistoryDocSnap.data(),
+            });
         } else {
+            // 문서가 없을 경우 404 응답
             res.status(404).json({ message: 'User not found' });
         }
     } catch (error) {
