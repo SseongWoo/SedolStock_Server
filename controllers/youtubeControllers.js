@@ -146,15 +146,10 @@ export async function getLiveData(req, res) {
         // }
 
         const countMapData = await getJson('../json/liveData.json');
-        const countSubMapData = await getJson('../json/liveSubData.json');
         const chartDataList = await getJson('../json/liveChart.json');
 
         if (!countMapData || Object.keys(countMapData).length === 0) {
             return res.status(404).json({ message: 'No data found in Firestore for document "0"' });
-        }
-
-        if (!countSubMapData || Object.keys(countSubMapData).length === 0) {
-            return res.status(404).json({ message: 'No chart data found in Firestore for document "0_chart"' });
         }
 
         if (!chartDataList || Object.keys(countMapData).length === 0) {
@@ -171,7 +166,6 @@ export async function getLiveData(req, res) {
             message: 'Live data and chart data retrieved successfully.',
             countMapData: countMapData,
             chartDataList: chartDataList,
-            countSubMapData: countSubMapData
         });
 
     } catch (error) {

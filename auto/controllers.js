@@ -21,10 +21,8 @@ const packageName = process.env.APP_PACKAGE_NAME;
 const packageAPIKEY = path.resolve(__dirname, process.env.APP_API_KEY);
 
 const delistingTime = Config.PERCENT_CONFIG.delistingTime;       // 상장폐지 기간
-const viewPercentage = Config.PERCENT_CONFIG.viewPercentage;     // 조회수 배율
-const likePercentage = Config.PERCENT_CONFIG.likePercentage;     // 좋아요 수 배율
-const viewFirstPrice = Config.PERCENT_CONFIG.viewFirstPrice;
-const likeFirstPrice = Config.PERCENT_CONFIG.likeFirstPrice;
+const percentage = Config.PERCENT_CONFIG.percentage;     // 조회수 배율
+const firstPrice = Config.PERCENT_CONFIG.firstPrice;
 
 
 // YouTube API 인스턴스를 생성합니다.
@@ -113,7 +111,6 @@ export async function updateLiveData() {
     try {
         // JSON 파일 읽기
         const lastDoc = await getJson('../json/liveData.json');
-        const lastSubDoc = await getJson('../json/liveSubData.json');
         const chartDataDoc = await getJson('../json/liveChart.json');
         const videoListDoc = await getJson('../json/videoList.json');
 
@@ -125,7 +122,6 @@ export async function updateLiveData() {
 
         // 데이터 초기화
         const countMapData = lastDoc || {};
-        const countSubMapData = lastSubDoc || {};
         const chartDataList = chartDataDoc || {};
 
         // 비디오 ID 추출
@@ -148,37 +144,27 @@ export async function updateLiveData() {
             }
         }
 
-        // console.log('Extracted Video IDs:', videoIdsByChannel);
-
         const promises = [];
         const countMap = {};
-        const subCountMap = {};
 
         // 각 채널의 데이터를 병렬로 처리
-        for (let i = 0; i < channelIdList.length; i += 2) {
-            const channelItem = channelIdList[i];
-            const subChannelItem = channelIdList[i + 1];
-
+        for (const channelItem of channelIdList) {
             promises.push((async () => {
+                // 채널의 비디오 ID 가져오기
                 const videoIds = videoIdsByChannel[channelItem]?.join(',');
-                const subVideoIds = videoIdsByChannel[subChannelItem]?.join(',');
-                if (!videoIds || !subVideoIds) return;
-                const [response, subResponse] = await Promise.all([
-                    youtube.videos.list({ id: videoIds, part: 'statistics' }),
-                    youtube.videos.list({ id: subVideoIds, part: 'statistics' })
-                ]);
+                if (!videoIds) return;
 
+                // YouTube API 호출
+                const response = await youtube.videos.list({ id: videoIds, part: 'statistics' });
+
+                // 기존 데이터 가져오기
                 const existingData = countMapData[channelItem] || {};
-                const subExistingData = countSubMapData[subChannelItem] || {};
-
                 countMap[channelItem] = initializeCountData(existingData);
-                subCountMap[subChannelItem] = initializeCountData(subExistingData);
 
-                //console.log((response.data.items));
+                // 통계 데이터 집계
                 aggregateStatistics(response.data.items, countMap[channelItem]);
-                aggregateStatistics(subResponse.data.items, subCountMap[subChannelItem]);
 
-                updateCountDifferences(countMap[channelItem], subCountMap[subChannelItem]);
+                // 차이 및 가격 업데이트
                 updatePriceDifferences(countMap[channelItem], channelItem);
                 updateChartDataList(chartDataList, channelItem, countMap[channelItem]);
             })().catch(error => console.error(`Error fetching data for channel ${channelItem}:`, error)));
@@ -189,15 +175,12 @@ export async function updateLiveData() {
 
         // JSON 데이터 저장
         await updateJson('../json/liveData.json', countMap);
-        await updateJson('../json/liveSubData.json', subCountMap);
         await updateJson('../json/liveChart.json', chartDataList);
 
         // 파이어베이스에 저장
         await saveToFirestore('youtubelivedata/0_chart', JSON.parse(JSON.stringify(chartDataList)));
         await saveToFirestore('youtubelivedata/0', JSON.parse(JSON.stringify(countMap)));
-        await saveToFirestore('youtubelivedata/0_sub', JSON.parse(JSON.stringify(subCountMap)));
         await saveToFirestore(`youtubelivedata/history/${getDayName()}/${newGetTime()}`, JSON.parse(JSON.stringify(countMap)));
-        await saveToFirestore(`youtubelivedata/history_sub/${getDayName()}/${newGetTime()}`, JSON.parse(JSON.stringify(subCountMap)));
 
         console.log('All video IDs grouped by channel ID retrieved successfully.');
     } catch (error) {
@@ -207,25 +190,15 @@ export async function updateLiveData() {
 
 // 유틸 함수: 초기 countMap 데이터 설정
 function initializeCountData(existingData) {
+
     return {
         totalViewCount: 0,
         totalLikeCount: 0,
-        totalCommentCount: 0,
         lastTotalViewCount: existingData.totalViewCount || 0,
         lastTotalLikeCount: existingData.totalLikeCount || 0,
-        lastTotalCommentCount: existingData.totalCommentCount || 0,
-        lastDifferenceViewCount: existingData.differenceViewCount || 0,
-        lastDifferenceLikeCount: existingData.differenceLikeCount || 0,
-        lastDifferenceCommentCount: existingData.differenceCommentCount || 0,
-        lastViewCountPrice: existingData.viewCountPrice || viewFirstPrice,
-        lastLikeCountPrice: existingData.likeCountPrice || likeFirstPrice,
-        lastCommentCountPrice: existingData.commentCountPrice || 10000,
-        viewCountPrice: 0,
-        likeCountPrice: 0,
-        commentCountPrice: 0,
-        viewDelisting: existingData.viewDelisting || 0,
-        likeDelisting: existingData.likeDelisting || 0,
-        commentDelisting: existingData.commentDelisting || 0,
+        lastPrice: existingData.price || firstPrice,
+        price: 0,
+        delisting: existingData.delisting || 0,
         updateTime: getTime(),
     };
 }
@@ -236,61 +209,27 @@ function aggregateStatistics(items, countData) {
         const statistics = item.statistics;
         countData.totalViewCount += parseInt(statistics.viewCount, 10) || 0;
         countData.totalLikeCount += parseInt(statistics.likeCount, 10) || 0;
-        countData.totalCommentCount += parseInt(statistics.commentCount, 10) || 0;
     });
-}
-
-// 유틸 함수: 차이 계산
-function updateCountDifferences(countData, subCountData) {
-    countData.differenceViewCount = countData.totalViewCount + subCountData.totalViewCount;
-    countData.differenceLikeCount = countData.totalLikeCount + subCountData.totalLikeCount;
-    countData.differenceCommentCount = countData.totalCommentCount + subCountData.totalCommentCount;
 }
 
 // 유틸 함수: 가격 업데이트
 function updatePriceDifferences(countData, channelItem) {
-    if (countData.viewDelisting > 0) {
-        countData.viewCountPrice = 0;
-        countData.viewDelisting--;
-        if (countData.viewDelisting <= 0) {
-            countData.viewCountPrice = viewFirstPrice;
+    if (countData.delisting > 0) {
+        countData.price = 0;
+        countData.delisting--;
+        if (countData.delisting <= 0) {
+            countData.price = firstPrice;
         }
     } else {
-        countData.viewCountPrice += (countData.differenceViewCount * viewPercentage) - (countData.lastDifferenceViewCount * viewPercentage);
-        if (countData.viewCountPrice <= 0) {
-            countData.viewCountPrice = 0;
-            countData.viewDelisting = delistingTime;
-            deleteDelistingStock(channelItem, 'view');
-        }
-    }
-    if (countData.likeDelisting > 0) {
-        countData.likeCountPrice = 0;
-        countData.likeDelisting--;
+        const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
+        const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
 
-        if (countData.likeDelisting <= 0) {
-            countData.likeCountPrice = likeFirstPrice;
-        }
+        countData.price += (viewDiff * percentage) + (likeDiff * percentage);
 
-    } else {
-        countData.likeCountPrice += (countData.differenceLikeCount * likePercentage) - (countData.lastDifferenceLikeCount * likePercentage);
-        if (countData.likeCountPrice <= 0) {
-            countData.likeCountPrice = 0;
-            countData.likeDelisting = delistingTime;
-            deleteDelistingStock(channelItem, 'like');
-        }
-    }
-    if (countData.commentDelisting > 0) {
-        countData.commentCountPrice = 0;
-        countData.commentDelisting--;
-
-        if (countData.commentDelisting <= 0) {
-            countData.commentCountPrice = 10000;
-        }
-    } else {
-        countData.commentCountPrice += countData.differenceCommentCount - countData.lastDifferenceCommentCount;
-        if (countData.commentCountPrice <= 0) {
-            countData.commentCountPrice = 0;
-            countData.commentDelisting = delistingTime;
+        if (countData.price <= 0) {
+            countData.price = 0;
+            countData.delisting = delistingTime;
+            deleteDelistingStock(channelItem);
         }
     }
 }
@@ -298,23 +237,17 @@ function updatePriceDifferences(countData, channelItem) {
 // 유틸 함수: 차트 데이터 업데이트
 function updateChartDataList(chartDataList, channelItem, countData) {
     if (!chartDataList[channelItem]) {
-        chartDataList[channelItem] = { viewCount: [], likeCount: [], commentCount: [] };
+        chartDataList[channelItem] = { price: [] };
     }
-
-    if (chartDataList[channelItem].viewCount.length > 50) {
-        chartDataList[channelItem].viewCount.shift();
-        chartDataList[channelItem].likeCount.shift();
-        chartDataList[channelItem].commentCount.shift();
+    if (chartDataList[channelItem].price.length > 50) {
+        chartDataList[channelItem].price.shift();
     }
-
-    chartDataList[channelItem].viewCount.push(countData.viewCountPrice);
-    chartDataList[channelItem].likeCount.push(countData.likeCountPrice);
-    chartDataList[channelItem].commentCount.push(countData.commentCountPrice);
+    chartDataList[channelItem].price.push(countData.price);
 }
 
-async function deleteDelistingStock(itemUid, itemType) {
+async function deleteDelistingStock(itemUid) {
     try {
-        const itemName = `${itemUid}_${itemType}`;
+        const itemName = itemUid;
 
         // 1. tradelist 경로의 문서 가져오기 (유저 UID가 문서 이름)
         const tradelistCollection = db.collection('youtubelivedata')
@@ -375,7 +308,9 @@ async function deleteDelistingStock(itemUid, itemType) {
         );
 
         // 3. 모든 업데이트 및 메시지 작업 완료 대기
-        Promise.all([...updatePromises, ...deletePromises])
+        await Promise.all([...updatePromises, ...deletePromises].map(promise =>
+            promise.catch(error => console.error('Promise failed:', error))
+        ));
 
         console.log('All stock documents and messages updated successfully.');
     } catch (error) {

@@ -30,7 +30,7 @@ export async function getUserTradeDataList(req, res) {
 // 거래 시도후 문제없으면 그대로 진행
 export async function tryTrade(req, res) {
     const { uid } = req.params; // 사용자 ID
-    const { itemuid, itemtype, itemcount, transactionprice, type, priceavg } = req.body; // 요청 본문에서 거래 정보 가져오기
+    const { itemuid, itemcount, transactionprice, type, priceavg } = req.body; // 요청 본문에서 거래 정보 가져오기
 
     //console.log("priceavg: ", priceavg); // 거래 전, 로그 추가
 
@@ -39,7 +39,7 @@ export async function tryTrade(req, res) {
     const userLastTradeDocRef = db.collection('users').doc(uid).collection('trade').doc('0_last');
 
     // 비동기 함수 호출 시 await 사용
-    const itemprice = await getPriceData(itemuid, itemtype);
+    const itemprice = await getPriceData(itemuid);
     const moneybefore = await getUserMoneyData(uid);
     const tradetime = new Date().toISOString(); // 시간은 ISO 문자열로 저장
     let moneyafter = 0;
@@ -126,13 +126,13 @@ export async function tryTrade(req, res) {
                 });
 
                 // 거래 리스트 업데이트 함수 호출
-                await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, itemcount, transactionprice, itemtype, type, priceavg);
+                await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, itemcount, transactionprice, type, priceavg);
                 // 사용자 지갑 업데이트
-                await updateUserWallet(uid, `${itemuid}_${itemtype}`, itemcount, transactionprice, type);
+                await updateUserWallet(uid, itemuid, itemcount, transactionprice, type);
 
                 await updateUserMoney(uid, moneyafter);
 
-                await setStockCount(itemuid, itemtype, uid, itemcount, type)
+                await setStockCount(itemuid, uid, itemcount, type)
 
 
 
@@ -155,7 +155,7 @@ export async function tryTrade(req, res) {
 }
 
 // 사용자의 거래 내역 리스트 데이터를 업데이트 하는 작업
-async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, itemUID, itemCount, transactionPrice, itemtype, type, priceAvg) {
+async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, itemUID, itemCount, transactionPrice, type, priceAvg) {
     try {
         const userTradeListDocRef = db.collection('users').doc(uid).collection('trade').doc('0');
         const userTradeDocSnap = await userTradeListDocRef.get();
@@ -165,7 +165,6 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
             let moneyAfterList = userTradeDocSnap.data().moneyafter || [];
             let tradeTimeList = userTradeDocSnap.data().tradetime || [];
             let itemUIDList = userTradeDocSnap.data().itemuid || [];
-            let itemTypeList = userTradeDocSnap.data().itemtype || [];
             let itemCountList = userTradeDocSnap.data().itemcount || [];
             let transactionPriceList = userTradeDocSnap.data().transactionprice || [];
             let typeList = userTradeDocSnap.data().type || [];
@@ -179,7 +178,6 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 moneyAfterList.shift();
                 tradeTimeList.shift();
                 itemUIDList.shift();
-                itemTypeList.shift();
                 itemCountList.shift();
                 transactionPriceList.shift();
                 typeList.shift();
@@ -191,7 +189,6 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
             moneyAfterList.push(moneyAfter);
             tradeTimeList.push(tradeTime);
             itemUIDList.push(itemUID);
-            itemTypeList.push(itemtype);
             itemCountList.push(itemCount);
             transactionPriceList.push(transactionPrice);
             typeList.push(type);
@@ -203,7 +200,6 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 'moneyafter': moneyAfterList,
                 'tradetime': tradeTimeList,
                 'itemuid': itemUIDList,
-                'itemtype': itemTypeList,
                 'itemcount': itemCountList,
                 'transactionprice': transactionPriceList,
                 'type': typeList,
@@ -217,7 +213,6 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 'moneyafter': [moneyAfter],
                 'tradetime': [tradeTime],
                 'itemuid': [itemUID],
-                'itemtype': [itemtype],
                 'itemcount': [itemCount],
                 'transactionprice': [transactionPrice],
                 'type': [type],
@@ -267,7 +262,7 @@ async function getUserTradeListData(uid) {
     }
 }
 
-export async function getPriceData(channelUID, itemtype) {
+export async function getPriceData(channelUID) {
     try {
         // JSON 파일에서 데이터를 가져옴
         const priceData = await getJson('../json/liveData.json');
@@ -282,16 +277,7 @@ export async function getPriceData(channelUID, itemtype) {
         const channelData = priceData[channelUID];
 
         // itemtype 값에 따른 가격 데이터 반환
-        if (itemtype === 'view') {
-            return channelData.viewCountPrice;
-        } else if (itemtype === 'comment') {
-            return channelData.commentCountPrice;
-        } else if (itemtype === 'like') {
-            return channelData.likeCountPrice;
-        } else {
-            console.log(`Invalid itemtype: ${itemtype}`);
-            return null; // 잘못된 itemtype의 경우 null 반환
-        }
+        return channelData.price;
     } catch (error) {
         console.error("Error fetching data from JSON file:", error);
         return null;
@@ -329,68 +315,50 @@ async function getUserMoneyData(userUID) {
 
 async function updateUserWallet(uid, stockName, stockCount, stockPrice, tradeType) {
     try {
-        // Firestore의 'wallet' 컬렉션에서 특정 사용자 문서를 참조
+        // Firestore 참조
         const walletDocRef = db.collection('users').doc(uid).collection('wallet').doc('stock');
 
-        // Firestore에서 해당 사용자의 지갑 데이터를 가져옵니다
+        // Firestore에서 사용자 지갑 데이터 가져오기
         const walletDocSnap = await walletDocRef.get();
+        const walletData = walletDocSnap.exists ? walletDocSnap.data() : {};
 
-        if (walletDocSnap.exists) {
-            // 문서가 존재할 경우 데이터 가져오기
-            const walletData = walletDocSnap.data();
+        // 기존 주식 데이터 가져오기
+        const stockData = walletData[stockName] || { stockCount: 0, stockPrice: 0 };
 
-            // `stockName`을 키로 데이터 찾기
-            let keyToUpdate = null;
-            for (const key in walletData) {
-                if (walletData[key].stockName === stockName) {
-                    keyToUpdate = key;
-                    break;
-                }
-            }
+        // 수량 및 가격 계산
+        const currentCount = stockData.stockCount;
+        const countToAdd = parseInt(stockCount, 10);
 
-            if (keyToUpdate) {
-                // 데이터 타입 검사 및 유효성 확인
-                const currentCount = parseInt(walletData[keyToUpdate].stockCount, 10);
-                const countToAdd = parseInt(stockCount, 10);
-
-                if (isNaN(currentCount) || isNaN(countToAdd) || currentCount < 0 || countToAdd < 0) {
-                    console.error('Invalid stock count data.');
-                    return;
-                }
-                let updateCount
-                let updatePrice
-                // 수량과 가격 계산
-                if (tradeType == 'buy') {
-                    updateCount = currentCount + countToAdd;
-                    updatePrice = updateCount > 0
-                        ? walletData[keyToUpdate].stockPrice + (stockPrice * countToAdd)
-                        : 0;
-                } else {
-                    updateCount = currentCount - countToAdd;
-                    updatePrice = updateCount > 0
-                        ? walletData[keyToUpdate].stockPrice - (stockPrice * countToAdd)
-                        : 0;
-                }
-
-                // 업데이트된 데이터를 객체로 생성
-                const updatedData = {
-                    ...walletData[keyToUpdate],
-                    stockCount: updateCount,
-                    stockPrice: updatePrice
-                };
-
-                // Firestore에 데이터 업데이트
-                await walletDocRef.update({
-                    [keyToUpdate]: updatedData
-                });
-
-                //console.log(`User wallet updated successfully for key: ${keyToUpdate}`);
-            } else {
-                console.log(`No matching key found with stockName: ${stockName}`);
-            }
-        } else {
-            console.log("No such document exists!");
+        if (isNaN(countToAdd) || countToAdd < 0) {
+            console.error('Invalid stock count data.');
+            return;
         }
+
+        let updateCount;
+        let updatePrice;
+
+        if (tradeType === 'buy') {
+            updateCount = currentCount + countToAdd;
+            updatePrice = (stockData.stockPrice * currentCount + stockPrice * countToAdd) / updateCount;
+        } else {
+            updateCount = currentCount - countToAdd;
+            updatePrice = updateCount > 0
+                ? (stockData.stockPrice * currentCount - stockPrice * countToAdd) / updateCount
+                : 0;
+        }
+
+        // Firestore에 업데이트할 데이터 준비
+        const updatedData = {
+            stockCount: updateCount,
+            stockPrice: updatePrice,
+        };
+
+        // Firestore 업데이트
+        await walletDocRef.update({
+            [stockName]: updatedData,
+        });
+
+        console.log(`User wallet updated for ${stockName}:`, updatedData);
     } catch (error) {
         console.error("Error updating user wallet with stock types:", error);
     }
@@ -415,18 +383,18 @@ async function updateUserMoney(uid, money) {
             await moneyDocRef.set({
                 'money': money
             });
-            console.log(`User's money document created successfully for uid: ${uid}`);
+            //console.log(`User's money document created successfully for uid: ${uid}`);
         }
     } catch (error) {
         console.error("Error updating user money:", error);
     }
 }
 
-async function setStockCount(itemUid, itemType, uid, count, type) {
+async function setStockCount(itemUid, uid, count, type) {
     try {
         const docRef = db.collection('youtubelivedata')
             .doc('tradelist')
-            .collection(`${itemUid}_${itemType}`)
+            .collection(itemUid)
             .doc(uid);
 
         if (type === 'buy') {

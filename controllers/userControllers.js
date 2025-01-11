@@ -39,7 +39,7 @@ export async function signUpUserData(req, res) {
         await createName(uid, name);
 
         // 사용자의 지갑 데이터베이스를 생성
-        await createUserWallet(uid);
+        //await createUserWallet(uid);
 
         res.status(201).json({ message: 'User Data added successfully', uid: uid });
     } catch (error) {
@@ -99,7 +99,7 @@ export async function signUpUserData2(req, res) {
         await createName(uid, name);
 
         // 사용자의 지갑 데이터베이스를 생성
-        await createUserWallet(uid);
+        //await createUserWallet(uid);
 
         // 응답 반환
         res.status(201).json({ message: 'User Data updated successfully', uid: uid });
@@ -322,35 +322,6 @@ export async function getUserData(req, res) {
     }
 }
 
-// name 컬랙션에 생성할 이름을 문서로 만드는 함수
-async function createUserWallet(uid) {
-    try {
-        // Firestore의 'wallet' 컬렉션에서 특정 사용자 문서를 참조
-        const walletDocRef = db.collection('users').doc(uid).collection('wallet').doc('stock');
-
-        // 각 채널 ID와 stockType을 조합하여 키를 생성하고 데이터를 설정
-        let walletData = {};
-        for (let i = 0; i < channelIdList.length; i += 2) {
-            const channelId = channelIdList[i];
-            stockType.forEach(type => {
-                const key = `${channelId}_${type}`;
-                walletData[key] = {
-                    stockName: `${channelId}_${type}`, // 기본값 설정
-                    stockCount: 0, // 기본값 설정
-                    stockPrice: 0  // 기본값 설정
-                };
-            });
-        }
-
-        // Firestore에 데이터를 저장
-        await walletDocRef.set(walletData);
-
-        console.log("User wallet created successfully with stock types");
-    } catch (error) {
-        console.error("Error creating user wallet with stock types:", error);
-    }
-}
-
 export async function getUserWallet(req, res) {
     const { uid } = req.params;
 
@@ -459,6 +430,7 @@ export async function restartUserData(req, res) {
         // 거래 데이터 삭제
         await db.collection('users').doc(uid).collection('trade').doc('0').delete();
         await db.collection('users').doc(uid).collection('trade').doc('0_last').delete();
+        await db.collection('users').doc(uid).collection('wallet').doc('stock').delete();
 
         // 사용자 문서 업데이트
         await userDocRef.update({
@@ -473,10 +445,6 @@ export async function restartUserData(req, res) {
             totalmoneyhistory: [{ money: initialMoney, date: date }],
             date: date,
         });
-
-        // 사용자 지갑 생성
-        await createUserWallet(uid);
-
         // 성공 응답
         res.status(201).json({ message: 'User data reset successfully', uid: uid });
     } catch (error) {
