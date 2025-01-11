@@ -228,7 +228,9 @@ function updatePriceDifferences(countData, channelItem) {
 
         if (priceData < -lowerLimit) {
             priceData = -lowerLimit;
+            console.log('priceData : ' + priceData + 'lowerLimit : ' + lowerLimit);
         }
+
 
         countData.price += priceData;
 
