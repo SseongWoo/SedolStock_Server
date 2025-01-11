@@ -5,7 +5,8 @@ export class Config {
     };
     static PERCENT_CONFIG = {
         delistingTime: 5,      // 상장폐지 기간
-        percentage: 100,   // 조회수 배율
-        firstPrice: 100000,// 조회수 초기 금액
+        percentage: 100,   // 배율
+        firstPrice: 100000,// 초기 금액
+        lowerLimit: 10000, // 최소 하한가
     }
 }

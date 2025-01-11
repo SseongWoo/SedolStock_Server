@@ -23,6 +23,7 @@ const packageAPIKEY = path.resolve(__dirname, process.env.APP_API_KEY);
 const delistingTime = Config.PERCENT_CONFIG.delistingTime;       // 상장폐지 기간
 const percentage = Config.PERCENT_CONFIG.percentage;     // 조회수 배율
 const firstPrice = Config.PERCENT_CONFIG.firstPrice;
+const lowerLimit = Config.PERCENT_CONFIG.lowerLimit;
 
 
 // YouTube API 인스턴스를 생성합니다.
@@ -223,8 +224,13 @@ function updatePriceDifferences(countData, channelItem) {
     } else {
         const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
         const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
+        let priceData = (viewDiff * percentage) + (likeDiff * percentage);
 
-        countData.price += (viewDiff * percentage) + (likeDiff * percentage);
+        if (priceData < -lowerLimit) {
+            priceData = -lowerLimit;
+        }
+
+        countData.price += priceData;
 
         if (countData.price <= 0) {
             countData.price = 0;
