@@ -320,7 +320,14 @@ async function updateUserWallet(uid, stockName, stockCount, stockPrice, tradeTyp
         const currentCount = stockData.stockCount;
         const countToAdd = parseInt(stockCount, 10);
 
-        if (isNaN(countToAdd) || countToAdd < 0) {
+        // 거래 타입 검증
+        if (tradeType !== 'buy' && tradeType !== 'sell') {
+            console.error('Invalid trade type.');
+            return;
+        }
+
+        // 입력값 검증
+        if (!Number.isInteger(countToAdd) || countToAdd <= 0) {
             console.error('Invalid stock count data.');
             return;
         }
@@ -338,16 +345,22 @@ async function updateUserWallet(uid, stockName, stockCount, stockPrice, tradeTyp
                 : 0;
         }
 
-        // Firestore에 업데이트할 데이터 준비
+        // 업데이트할 데이터 준비
         const updatedData = {
             stockCount: updateCount,
             stockPrice: updatePrice,
         };
 
         // Firestore 업데이트
-        await walletDocRef.update({
-            [stockName]: updatedData,
-        });
+        if (walletDocSnap.exists) {
+            await walletDocRef.update({
+                [stockName]: updatedData,
+            });
+        } else {
+            await walletDocRef.set({
+                [stockName]: updatedData,
+            });
+        }
 
         console.log(`User wallet updated for ${stockName}:`, updatedData);
     } catch (error) {
