@@ -30,7 +30,7 @@ export async function getUserTradeDataList(req, res) {
 // 거래 시도후 문제없으면 그대로 진행
 export async function tryTrade(req, res) {
     const { uid } = req.params; // 사용자 ID
-    const { itemuid, channelType, itemcount, transactionprice, tradeType, priceavg } = req.body; // 요청 본문에서 거래 정보 가져오기
+    const { itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg } = req.body; // 요청 본문에서 거래 정보 가져오기
 
     //console.log("priceavg: ", priceavg); // 거래 전, 로그 추가
 
