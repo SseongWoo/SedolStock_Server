@@ -99,19 +99,6 @@ export async function tryTrade(req, res) {
         if (tradeData !== 'error') {
             // 무결성 확인
             if (moneybefore === tradeData.moneyafter) {
-                // 거래 데이터 Firestore에 저장
-                // await userTradeDocRef.set({
-                //     'moneybefore': moneybefore,
-                //     'moneyafter': moneyafter,
-                //     'tradetime': tradetime,
-                //     'itemuid': itemuid,
-                //     'itemtype': itemtype,
-                //     'itemcount': itemcount,
-                //     'transactionprice': transactionprice,
-                //     'type': type,
-                //     'priceavg': priceavg,
-                // });
-
                 // 마지막 거래 정보 업데이트
                 await userLastTradeDocRef.update({
                     'moneybefore': moneybefore,
@@ -155,7 +142,7 @@ export async function tryTrade(req, res) {
 }
 
 // 사용자의 거래 내역 리스트 데이터를 업데이트 하는 작업
-async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, itemUID, channelType, itemCount, transactionPrice, tradeType, priceAvg) {
+async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, itemUID, channeltype, itemCount, transactionPrice, tradetype, priceAvg) {
     try {
         const userTradeListDocRef = db.collection('users').doc(uid).collection('trade').doc('0');
         const userTradeDocSnap = await userTradeListDocRef.get();
@@ -163,12 +150,12 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
         if (userTradeDocSnap.exists) {
             let moneyBeforeList = userTradeDocSnap.data().moneybefore || [];
             let moneyAfterList = userTradeDocSnap.data().moneyafter || [];
-            let channelTypeList = userTradeDocSnap.data().channelType || [];
+            let channelTypeList = userTradeDocSnap.data().channeltype || [];
             let tradeTimeList = userTradeDocSnap.data().tradetime || [];
             let itemUIDList = userTradeDocSnap.data().itemuid || [];
             let itemCountList = userTradeDocSnap.data().itemcount || [];
             let transactionPriceList = userTradeDocSnap.data().transactionprice || [];
-            let tradeTypeList = userTradeDocSnap.data().tradeType || [];
+            let tradeTypeList = userTradeDocSnap.data().tradetype || [];
             let priceAvgList = userTradeDocSnap.data().priceavg || [];
 
             //console.log(moneyAfterList);
@@ -189,12 +176,12 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
             // 새 데이터를 리스트에 추가
             moneyBeforeList.push(moneyBefore);
             moneyAfterList.push(moneyAfter);
-            channelTypeList.push(channelType)
+            channelTypeList.push(channeltype)
             tradeTimeList.push(tradeTime);
             itemUIDList.push(itemUID);
             itemCountList.push(itemCount);
             transactionPriceList.push(transactionPrice);
-            tradeTypeList.push(tradeType);
+            tradeTypeList.push(tradetype);
             priceAvgList.push(priceAvg);
 
             // Firestore 문서 업데이트
@@ -206,7 +193,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 'channeltype': channelTypeList,
                 'itemcount': itemCountList,
                 'transactionprice': transactionPriceList,
-                'tradetype': tradeTypeList,
+                'tradetype': tradetypeList,
                 'priceavg': priceAvgList,
             });
 
@@ -217,10 +204,10 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 'moneyafter': [moneyAfter],
                 'tradetime': [tradeTime],
                 'itemuid': [itemUID],
-                'channeltype': [channelType],
+                'channeltype': [channeltype],
                 'itemcount': [itemCount],
                 'transactionprice': [transactionPrice],
-                'tradetype': [tradeType],
+                'tradetype': [tradetype],
                 'priceavg': [priceAvg],
             });
         }
