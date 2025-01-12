@@ -216,17 +216,22 @@ function aggregateStatistics(items, countData) {
 
 // 유틸 함수: 가격 업데이트 
 function updatePriceDifferences(countData, channelItem) {
+    const newDiff = countData.totalViewCount + countData.totalLikeCount;
+    let diffValue = (newDiff - countData.lastDiffValue) * percentage;
+
     if (countData.delisting > 0) {
         countData.price = 0;
         countData.delisting--;
+        if (diffValue < -lowerLimit) {
+            console.log('diffValue : ' + diffValue + 'lowerLimit : ' + lowerLimit);
+            diffValue = -lowerLimit;
+        }
+        countData.diffValue = diffValue;
+
         if (countData.delisting <= 0) {
             countData.price = firstPrice;
         }
     } else {
-        const newDiff = countData.totalViewCount + countData.totalLikeCount;
-        let diffValue = (newDiff - countData.lastDiffValue) * percentage;
-
-
         // 이벤트 일때 맴버의 생일이나 특정 날짜에 두배 이벤트 적용
         if (diffValue < -lowerLimit) {
             console.log('diffValue : ' + diffValue + 'lowerLimit : ' + lowerLimit);
