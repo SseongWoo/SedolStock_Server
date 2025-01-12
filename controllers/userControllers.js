@@ -422,7 +422,7 @@ async function updateUserTotalMoneyHistory(uid, totalmoney) {
             });
         }
 
-        console.log("User total money history updated successfully.");
+        //console.log("User total money history updated successfully.");
     } catch (error) {
         console.error("Error updating user total money:", error);
     }
