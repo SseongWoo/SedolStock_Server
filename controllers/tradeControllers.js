@@ -56,7 +56,7 @@ export async function tryTrade(req, res) {
 
     let feeRate = 0.0;
 
-    if (tradeType === 'buy') {
+    if (tradetype === 'buy') {
         feeRate = Config.FEE_CONFIG.buyFeeRate;
     } else {
         feeRate = Config.FEE_CONFIG.sellFeeRate;
@@ -67,7 +67,7 @@ export async function tryTrade(req, res) {
     const fee = Math.round(totalPrice * feeRate);
 
     // 거래 유형에 따른 계산 처리
-    if (tradeType === 'buy') {
+    if (tradetype === 'buy') {
         const totalCost = (itemprice * itemcount) + fee;
         if (moneybefore >= totalCost) {
             moneyafter = Math.round(moneybefore - totalCost);
@@ -75,7 +75,7 @@ export async function tryTrade(req, res) {
             console.error("오류 : 사용자의 보유 재산을 넘는 요청입니다.");
             return res.status(403).json({ message: '오류 : 사용자의 보유 재산을 넘는 요청입니다.' });
         }
-    } else if (tradeType === 'sell') {
+    } else if (tradetype === 'sell') {
         const totalRevenue = (itemprice * itemcount) - fee;
         moneyafter = moneybefore + totalRevenue;
     } else {
@@ -87,10 +87,10 @@ export async function tryTrade(req, res) {
     const tradeData = await getUserTradeListData(uid);
 
     // 매개변수 타입 확인
-    if (typeof moneybefore !== 'number' || typeof moneyafter !== 'number' || typeof channelType !== 'string' ||
+    if (typeof moneybefore !== 'number' || typeof moneyafter !== 'number' || typeof channeltype !== 'string' ||
         typeof itemuid !== 'string' ||
         typeof itemcount !== 'number' || typeof tradetime !== 'string' ||
-        typeof transactionprice !== 'number' || typeof tradeType !== 'string') {
+        typeof transactionprice !== 'number' || typeof tradetype !== 'string') {
         return res.status(400).json({ message: "Invalid input data" });
     }
 
@@ -118,21 +118,21 @@ export async function tryTrade(req, res) {
                     'moneyafter': moneyafter,
                     'tradetime': tradetime,
                     'itemuid': itemuid,
-                    'channelType': channelType,
+                    'channelType': channeltype,
                     'itemcount': itemcount,
                     'transactionprice': transactionprice,
-                    'tradeType': tradeType,
+                    'tradeType': tradetype,
                     'priceavg': priceavg,
                 });
 
                 // 거래 리스트 업데이트 함수 호출
-                await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, channelType, itemcount, transactionprice, type, priceavg);
+                await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg);
                 // 사용자 지갑 업데이트
-                await updateUserWallet(uid, itemuid, itemcount, transactionprice, tradeType);
+                await updateUserWallet(uid, itemuid, itemcount, transactionprice, tradetype);
 
                 await updateUserMoney(uid, moneyafter);
 
-                await setStockCount(itemuid, uid, itemcount, tradeType)
+                await setStockCount(itemuid, uid, itemcount, tradetype)
 
 
 
