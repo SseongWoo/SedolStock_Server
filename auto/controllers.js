@@ -240,8 +240,6 @@ function updatePriceDifferences(countData, channelItem) {
         countData.price += diffValue;
         countData.diffValue = diffValue;
 
-        console.log(`totalDifference: ${totalDifference}, diffValue: ${diffValue}, countData.price: ${countData.price}`);
-
         // 가격이 0 이하일 경우 상장폐지 처리
         if (countData.price <= 0) {
             countData.price = 0;
