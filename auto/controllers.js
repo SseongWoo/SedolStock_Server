@@ -198,6 +198,8 @@ function initializeCountData(existingData) {
         lastTotalViewCount: existingData.totalViewCount || 0,
         lastTotalLikeCount: existingData.totalLikeCount || 0,
         lastPrice: existingData.price || firstPrice,
+        lastDiffValue: existingData.diffvalue || 0,
+        diffvalue: 0,
         price: 0,
         delisting: existingData.delisting || 0,
         updateTime: getTime(),
@@ -222,19 +224,16 @@ function updatePriceDifferences(countData, channelItem) {
             countData.price = firstPrice;
         }
     } else {
-        const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
-        const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
-        let priceData = (viewDiff * percentage) + (likeDiff * percentage);
+        const newDiff = countData.totalViewCount - countData.totalLikeCount;
+        let diffValue = (newDiff - countData.lastDiffValue) * percentage;
 
 
-        console.log('viewDiff = ' + viewDiff + ' likeDiff = ' + likeDiff + ' priceData = ' + priceData);
         // 이벤트 일때 맴버의 생일이나 특정 날짜에 두배 이벤트 적용
-        if (priceData < -lowerLimit) {
-            priceData = -lowerLimit;
-            console.log('priceData : ' + priceData + 'lowerLimit : ' + lowerLimit);
+        if (diffValue < -lowerLimit) {
+            diffValue = -lowerLimit;
+            console.log('diffValue : ' + diffValue + 'lowerLimit : ' + lowerLimit);
         }
-
-
+        countData.diffValue = diffValue;
         countData.price += priceData;
 
         if (countData.price <= 0) {
