@@ -199,7 +199,7 @@ function initializeCountData(existingData) {
         lastPrice: existingData.price || firstPrice,
         lastDiffValue: existingData.diffValue || 0,
         diffValue: 0,
-        price: 0,
+        price: existingData.price || firstPrice,
         delisting: existingData.delisting || 0,
         updateTime: getTime(),
     };
@@ -300,9 +300,9 @@ async function deleteDelistingStock(itemUid) {
                 time: currentTime,
             };
 
-            // 업데이트 및 메시지 저장 작업 추가
+            // wallet 문서 업데이트 (존재하지 않으면 새로 생성)
             updatePromises.push(
-                stockDocRef.update(updatedFields)
+                stockDocRef.set(updatedFields, { merge: true })
                     .then(() => console.log(`Updated stock document for user: ${userId}`))
                     .catch((error) => console.error(`Error updating stock for user ${userId}:`, error))
             );
