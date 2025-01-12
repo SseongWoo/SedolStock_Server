@@ -224,10 +224,10 @@ function updatePriceDifferences(countData, channelItem) {
     } else {
         const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
         const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
-        let priceData = (viewDiff * percentage) - (likeDiff * percentage);
+        let priceData = (viewDiff * percentage) + (likeDiff * percentage);
 
 
-        console.log('priceData = ' + priceData + 'lowerLimit = ' + lowerLimit);
+        console.log(channelItem + ', priceData = ' + priceData + ' lowerLimit = ' + lowerLimit);
         // 이벤트 일때 맴버의 생일이나 특정 날짜에 두배 이벤트 적용
         if (priceData < -lowerLimit) {
             priceData = -lowerLimit;
