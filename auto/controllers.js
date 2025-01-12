@@ -213,7 +213,7 @@ function aggregateStatistics(items, countData) {
     });
 }
 
-// 유틸 함수: 가격 업데이트
+// 유틸 함수: 가격 업데이트 
 function updatePriceDifferences(countData, channelItem) {
     if (countData.delisting > 0) {
         countData.price = 0;
@@ -224,8 +224,10 @@ function updatePriceDifferences(countData, channelItem) {
     } else {
         const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
         const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
-        let priceData = (viewDiff * percentage) + (likeDiff * percentage);
+        let priceData = (viewDiff * percentage) - (likeDiff * percentage);
 
+
+        // 이벤트 일때 맴버의 생일이나 특정 날짜에 두배 이벤트 적용
         if (priceData < -lowerLimit) {
             priceData = -lowerLimit;
             console.log('priceData : ' + priceData + 'lowerLimit : ' + lowerLimit);
