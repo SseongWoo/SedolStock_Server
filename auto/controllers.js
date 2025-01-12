@@ -216,8 +216,10 @@ function aggregateStatistics(items, countData) {
 
 // 유틸 함수: 가격 업데이트
 function updatePriceDifferences(countData, channelItem) {
-    const totalDifference = countData.totalViewCount + countData.totalLikeCount;
-    let diffValue = (totalDifference - countData.lastDiffValue) * percentage;
+    const newDiff = countData.totalViewCount - countData.totalLikeCount;
+    const oldDiff = countData.lastTotalViewCount - countData.lastTotalLikeCount;
+
+    let diffValue = (newDiff * percentage) - (newDiff * percentage);
 
     // 하한선 적용
     if (diffValue < -lowerLimit) {
