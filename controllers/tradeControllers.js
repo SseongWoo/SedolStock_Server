@@ -88,7 +88,7 @@ export async function tryTrade(req, res) {
 
     // 매개변수 타입 확인
     if (typeof moneybefore !== 'number' || typeof moneyafter !== 'number' ||
-        typeof itemuid !== 'string' || typeof itemtype !== 'string' ||
+        typeof itemuid !== 'string' ||
         typeof itemcount !== 'number' || typeof tradetime !== 'string' ||
         typeof transactionprice !== 'number' || typeof type !== 'string') {
         return res.status(400).json({ message: "Invalid input data" });
@@ -118,7 +118,6 @@ export async function tryTrade(req, res) {
                     'moneyafter': moneyafter,
                     'tradetime': tradetime,
                     'itemuid': itemuid,
-                    'itemtype': itemtype,
                     'itemcount': itemcount,
                     'transactionprice': transactionprice,
                     'type': type,
@@ -247,7 +246,6 @@ async function getUserTradeListData(uid) {
                 'moneyafter': 1000000,
                 'tradetime': '0',
                 'itemuid': '0',
-                'itemtype': '0',
                 'itemcount': 0,
                 'transactionprice': 0,
                 'type': '0',
