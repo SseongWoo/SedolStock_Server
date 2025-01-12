@@ -191,7 +191,6 @@ export async function updateLiveData() {
 
 // 유틸 함수: 초기 countMap 데이터 설정
 function initializeCountData(existingData) {
-
     return {
         totalViewCount: 0,
         totalLikeCount: 0,
@@ -224,7 +223,7 @@ function updatePriceDifferences(countData, channelItem) {
             countData.price = firstPrice;
         }
     } else {
-        const newDiff = countData.totalViewCount - countData.totalLikeCount;
+        const newDiff = countData.totalViewCount + countData.totalLikeCount;
         let diffValue = (newDiff - countData.lastDiffValue) * percentage;
 
 
