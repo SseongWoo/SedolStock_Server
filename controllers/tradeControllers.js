@@ -193,7 +193,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 'channeltype': channelTypeList,
                 'itemcount': itemCountList,
                 'transactionprice': transactionPriceList,
-                'tradetype': tradetypeList,
+                'tradetype': tradeTypeList,
                 'priceavg': priceAvgList,
             });
 
