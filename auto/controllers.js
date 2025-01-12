@@ -219,7 +219,7 @@ function updatePriceDifferences(countData, channelItem) {
     const newDiff = countData.totalViewCount - countData.totalLikeCount;
     const oldDiff = countData.lastTotalViewCount - countData.lastTotalLikeCount;
 
-    let diffValue = (newDiff * percentage) - (newDiff * percentage);
+    let diffValue = (newDiff * percentage) - (oldDiff * percentage);
 
     // 하한선 적용
     if (diffValue < -lowerLimit) {
