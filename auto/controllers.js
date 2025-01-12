@@ -234,7 +234,9 @@ function updatePriceDifferences(countData, channelItem) {
             console.log('diffValue : ' + diffValue + 'lowerLimit : ' + lowerLimit);
         }
         countData.diffValue = diffValue;
-        countData.price += priceData;
+        countData.price += diffValue;
+
+        console.log('newDiff : ' + newDiff + ' diffValue : ' + diffValue + ' countData.price : ' + countData.price);
 
         if (countData.price <= 0) {
             countData.price = 0;
