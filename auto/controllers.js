@@ -197,8 +197,6 @@ function initializeCountData(existingData) {
         lastTotalViewCount: existingData.totalViewCount || 0,
         lastTotalLikeCount: existingData.totalLikeCount || 0,
         lastPrice: existingData.price || firstPrice,
-        lastDiffValue: existingData.diffValue || 0,
-        diffValue: 0,
         price: existingData.price || firstPrice,
         delisting: existingData.delisting || 0,
         updateTime: getTime(),
@@ -238,7 +236,6 @@ function updatePriceDifferences(countData, channelItem) {
     } else {
         // 가격 업데이트
         countData.price += diffValue;
-        countData.diffValue = diffValue;
 
         // 가격이 0 이하일 경우 상장폐지 처리
         if (countData.price <= 0) {
