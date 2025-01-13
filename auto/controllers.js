@@ -198,7 +198,7 @@ function initializeCountData(existingData) {
         lastTotalViewCount: existingData.totalViewCount || 0,
         lastTotalLikeCount: existingData.totalLikeCount || 0,
         lastPrice: existingData.price || firstPrice,
-        lastDiff: existingData.price || 0,
+        lastDiff: existingData.totalDiff || 0,
         price: existingData.price || firstPrice,
         delisting: existingData.delisting || 0,
         updateTime: getTime(),
