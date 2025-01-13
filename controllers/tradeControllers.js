@@ -29,117 +29,64 @@ export async function getUserTradeDataList(req, res) {
 
 // 거래 시도후 문제없으면 그대로 진행
 export async function tryTrade(req, res) {
-    const { uid } = req.params; // 사용자 ID
-    const { itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg } = req.body; // 요청 본문에서 거래 정보 가져오기
+    const { uid } = req.params;
+    const { itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg } = req.body;
 
-    //console.log("priceavg: ", priceavg); // 거래 전, 로그 추가
-
-    // Firebase Firestore 경로 설정
-    //const userTradeDocRef = db.collection('users').doc(uid).collection('trade').doc(getTime());
     const userLastTradeDocRef = db.collection('users').doc(uid).collection('trade').doc('0_last');
 
-    // 비동기 함수 호출 시 await 사용
     const itemprice = await getPriceData(itemuid);
     const moneybefore = await getUserMoneyData(uid);
-    const tradetime = new Date().toISOString(); // 시간은 ISO 문자열로 저장
-    let moneyafter = 0;
-    // 데이터가 없을 경우의 오류 처리
+    const tradetime = new Date().toISOString();
+
     if (itemprice === null || moneybefore === null) {
         return res.status(500).json({ message: '가격 데이터를 불러오는데 실패하였습니다.' });
     }
 
-    // 가격 무결성 체크
     if (itemprice !== transactionprice) {
-        console.error("E무결성 오류 : 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.");
-        return res.status(403).json({ message: '무결성 오류 : 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.' });
+        console.error("무결성 오류: 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.");
+        return res.status(403).json({ message: '무결성 오류: 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.' });
     }
 
-    let feeRate = 0.0;
-
-    if (tradetype === 'buy') {
-        feeRate = Config.FEE_CONFIG.buyFeeRate;
-    } else {
-        feeRate = Config.FEE_CONFIG.sellFeeRate;
-    }
-
-
+    const feeRate = tradetype === 'buy' ? Config.FEE_CONFIG.buyFeeRate : Config.FEE_CONFIG.sellFeeRate;
     const totalPrice = itemprice * itemcount;
     const fee = Math.round(totalPrice * feeRate);
-    let totalCost = 0;
+    let totalCost = tradetype === 'buy' ? totalPrice + fee : totalPrice - fee;
 
-    // 거래 유형에 따른 계산 처리
-    if (tradetype === 'buy') {
-        totalCost = (itemprice * itemcount) + fee;
-        if (moneybefore >= totalCost) {
-            moneyafter = Math.round(moneybefore - totalCost);
-        } else {
-            console.error("오류 : 사용자의 보유 재산을 넘는 요청입니다.");
-            return res.status(403).json({ message: '오류 : 사용자의 보유 재산을 넘는 요청입니다.' });
-        }
-    } else if (tradetype === 'sell') {
-        totalCost = (itemprice * itemcount) - fee;
-        moneyafter = Math.round(moneybefore + totalCost);
-    } else {
-        console.error("오류 : 잘못된 인수로 요청되었습니다.");
-        return res.status(403).json({ message: '오류 : 잘못된 인수로 요청되었습니다.' });
-    }
+    let moneyafter = tradetype === 'buy' ? moneybefore - totalCost : moneybefore + totalCost;
 
-    // 거래 데이터 가져오기 함수
-    const tradeData = await getUserTradeListData(uid);
-
-    // 매개변수 타입 확인
-    if (typeof moneybefore !== 'number' || typeof moneyafter !== 'number' || typeof channeltype !== 'string' ||
-        typeof itemuid !== 'string' ||
-        typeof itemcount !== 'number' || typeof tradetime !== 'string' ||
-        typeof transactionprice !== 'number' || typeof tradetype !== 'string') {
-        return res.status(400).json({ message: "Invalid input data" });
+    if (moneyafter < 0) {
+        return res.status(403).json({ message: '오류: 사용자의 보유 재산을 넘는 요청입니다.' });
     }
 
     try {
-        // tradeData가 오류가 아닐 때 실행
-        if (tradeData !== 'error') {
-            // 무결성 확인
-            if (moneybefore === tradeData.moneyafter) {
-                // 마지막 거래 정보 업데이트
-                await userLastTradeDocRef.update({
-                    'moneybefore': moneybefore,
-                    'moneyafter': moneyafter,
-                    'tradetime': tradetime,
-                    'itemuid': itemuid,
-                    'channelType': channeltype,
-                    'itemcount': itemcount,
-                    'transactionprice': transactionprice,
-                    'totalCost': totalCost,
-                    'tradeType': tradetype,
-                    'priceavg': priceavg,
-                });
-
-                // 거래 리스트 업데이트 함수 호출
-                await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg);
-                // 사용자 지갑 업데이트
-                await updateUserWallet(uid, itemuid, itemcount, transactionprice, tradetype);
-
-                await updateUserMoney(uid, moneyafter);
-
-                await setStockCount(itemuid, uid, itemcount, tradetype)
-
-
-
-                // 성공 응답
-                res.status(200).json({ message: "Success" });
-            } else {
-                // 무결성 오류 발생 시
-                console.error("무결성 오류");
-                return res.status(403).json({ message: `무결성 오류: ${moneybefore}, ${tradeData.moneyafter}` });
-            }
-        } else {
-            // 거래 데이터를 가져오는 데 실패했을 때
-            return res.status(500).json({ message: "Failed to fetch trade document" });
+        const tradeData = await getUserTradeListData(uid);
+        if (Math.abs(moneybefore - tradeData.moneyafter) > 1) {
+            console.error("무결성 오류");
+            return res.status(403).json({ message: `무결성 오류: ${moneybefore}, ${tradeData.moneyafter}` });
         }
+
+        await userLastTradeDocRef.set({
+            'moneybefore': moneybefore,
+            'moneyafter': moneyafter,
+            'tradetime': tradetime,
+            'itemuid': itemuid,
+            'channelType': channeltype,
+            'itemcount': itemcount,
+            'transactionprice': transactionprice,
+            'totalCost': totalCost,
+            'tradeType': tradetype,
+            'priceavg': priceavg,
+        }, { merge: true });
+
+        await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg, totalCost);
+        await updateUserWallet(uid, itemuid, itemcount, transactionprice, tradetype);
+        await updateUserMoney(uid, moneyafter);
+        await setStockCount(itemuid, uid, itemcount, tradetype);
+
+        res.status(200).json({ message: "Success" });
     } catch (error) {
-        // 거래 처리 중 오류 발생 시
         console.error("Error processing trade document:", error);
-        return res.status(500).json({ message: "Failed to process trade document", error: error.message });
+        res.status(500).json({ message: "Failed to process trade document", error: error.message });
     }
 }
 
@@ -250,6 +197,7 @@ async function getUserTradeListData(uid) {
                 'transactionprice': 0,
                 'type': '0',
                 'priceavg': 0,
+                'totalcost': 0,
             };
             await userTradeDocRef.set(defaultData); // 기본 데이터를 Firestore에 저장
             return defaultData;
