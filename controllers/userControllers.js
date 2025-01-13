@@ -375,7 +375,7 @@ export async function updateUserTotalMoney(req, res) {
 
         // 데이터 업데이트
         await rankingRef.set({
-            totalMoney: totalmoney,
+            totalmoney: totalmoney,
             fandom: fandom,
         });
 
