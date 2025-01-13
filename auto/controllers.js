@@ -234,11 +234,11 @@ function updatePriceDifferences(countData, channelItem) {
         console.log(`diffValue: ${diffValue}, lowerLimit: ${lowerLimit}`);
         diffValue = -lowerLimit;
     }
-    // 상한선 적용
-    // else if (diffValue > upperLimit) {
-    //     console.log(`diffValue: ${diffValue}, upperLimit: ${upperLimit}`);
-    //     diffValue = upperLimit;
-    // }
+    //상한선 적용
+    else if (diffValue > upperLimit) {
+        console.log(`diffValue: ${diffValue}, upperLimit: ${upperLimit}`);
+        diffValue = upperLimit;
+    }
 
     // 상장폐지 상태 처리
     if (countData.delisting > 0) {

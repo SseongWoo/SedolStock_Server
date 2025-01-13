@@ -355,7 +355,7 @@ export async function getUserWallet(req, res) {
 
 export async function updateUserTotalMoney(req, res) {
     const { uid } = req.params;
-    const { totalmoney } = req.body;
+    const { totalmoney, fandom } = req.body;
 
     // 유효성 검사 추가
     if (!uid) {
@@ -369,6 +369,16 @@ export async function updateUserTotalMoney(req, res) {
     try {
         // 'users' 컬렉션의 문서 참조 생성
         const userDocRef = db.collection('users').doc(uid);
+
+        // 랭킹 업데이트
+        const rankingRef = realtimeDB.ref(`ranking/${uid}`);
+
+        // 데이터 업데이트
+        await rankingRef.set({
+            totalMoney: totalmoney,
+            fandom: fandom,
+        });
+
 
         // 사용자 데이터를 Firestore에 저장
         await userDocRef.update({ totalmoney });
