@@ -51,8 +51,8 @@ export async function tryTrade(req, res) {
     const totalPrice = itemprice * itemcount;
     const fee = Math.round(totalPrice * feeRate);
     let totalcost = tradetype === 'buy' ? totalPrice + fee : totalPrice - fee;
-
     let moneyafter = tradetype === 'buy' ? moneybefore - totalcost : moneybefore + totalcost;
+    let totalPriceAvg = tradetype === 'buy' ? 0 : priceavg + (priceavg * feeRate);
 
     if (moneyafter < 0) {
         return res.status(403).json({ message: '오류: 사용자의 보유 재산을 넘는 요청입니다.' });
@@ -75,11 +75,11 @@ export async function tryTrade(req, res) {
             'transactionprice': transactionprice,
             'totalcost': totalcost,
             'tradeType': tradetype,
-            'priceavg': priceavg,
+            'priceavg': totalPriceAvg,
             'fee': fee
         }, { merge: true });
 
-        await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg, totalcost, fee);
+        await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, channeltype, itemcount, transactionprice, tradetype, totalPriceAvg, totalcost, fee);
         await updateUserWallet(uid, itemuid, itemcount, transactionprice, tradetype);
         await updateUserMoney(uid, moneyafter);
         await setStockCount(itemuid, uid, itemcount, tradetype);
@@ -92,7 +92,7 @@ export async function tryTrade(req, res) {
 }
 
 // 사용자의 거래 내역 리스트 데이터를 업데이트 하는 작업
-async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, itemUID, channeltype, itemCount, transactionPrice, tradetype, priceAvg, totalcost, fee) {
+async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, itemUID, channeltype, itemCount, transactionPrice, tradetype, totalPriceAvg, totalcost, fee) {
     try {
         const userTradeListDocRef = db.collection('users').doc(uid).collection('trade').doc('0');
         const userTradeDocSnap = await userTradeListDocRef.get();
@@ -136,7 +136,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
             itemCountList.push(itemCount);
             transactionPriceList.push(transactionPrice);
             tradeTypeList.push(tradetype);
-            priceAvgList.push(priceAvg);
+            priceAvgList.push(totalPriceAvg);
             totalCostList.push(totalcost);
             feeList.push(fee);
 
@@ -166,7 +166,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 'itemcount': [itemCount],
                 'transactionprice': [transactionPrice],
                 'tradetype': [tradetype],
-                'priceavg': [priceAvg],
+                'priceavg': [totalPriceAvg],
                 'totalcost': [totalcost],
                 'fee': [fee],
             });
