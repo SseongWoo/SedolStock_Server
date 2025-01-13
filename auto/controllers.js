@@ -214,14 +214,19 @@ function aggregateStatistics(items, countData) {
 
 // 유틸 함수: 가격 업데이트
 function updatePriceDifferences(countData, channelItem) {
-    const newDiff = countData.totalViewCount - countData.totalLikeCount;
-    const oldDiff = countData.lastTotalViewCount - countData.lastTotalLikeCount;
+    const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
+    const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
 
-    let diffValue = (newDiff * percentage) - (oldDiff * percentage);
+    // 증가율 계산 (0으로 나누기 방지)
+    const viewRate = viewDiff / (countData.lastTotalViewCount || 1);
+    const likeRate = likeDiff / (countData.lastTotalLikeCount || 1);
+
+    // 가격 변동값 계산: 뷰 증가율과 좋아요 증가율의 차이를 기준으로 설정
+    let diffValue = (viewRate - likeRate) * percentage;
+    console.log('(' + viewRate + ' - ' + likeRate + ') * ' + percentage + ' = ' + diffValue);
 
     // 하한선 적용
     if (diffValue < -lowerLimit) {
-        console.log(`diffValue: ${diffValue}, lowerLimit: ${lowerLimit}`);
         diffValue = -lowerLimit;
     }
 
