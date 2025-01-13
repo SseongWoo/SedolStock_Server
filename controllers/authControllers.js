@@ -130,7 +130,19 @@ export async function deleteUserAuth(req, res) {
         const nameDocSnap = await nameDocRef.get();
 
         if (nameDocSnap.exists) {
-            await admin.auth().deleteUser(uid);
+            //await admin.auth().deleteUser(uid);
+            try {
+                const userRecord = await admin.auth().getUser(uid);
+                console.log(`User found: ${userRecord.uid}`);
+                await admin.auth().deleteUser(uid);
+                console.log(`Successfully deleted user: ${uid}`);
+            } catch (error) {
+                if (error.code === 'auth/user-not-found') {
+                    console.error(`User with UID ${uid} not found.`);
+                } else {
+                    console.error('Error:', error);
+                }
+            }
 
             // 문서가 존재할 경우 데이터 가져오기
             let uidList = nameDocSnap.data().uidlist || [];
