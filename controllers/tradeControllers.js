@@ -302,7 +302,7 @@ async function updateUserWallet(uid, stockName, stockCount, stockPrice, tradeTyp
         } else {
             updateCount = currentCount - countToAdd;
             updatePrice = updateCount > 0
-                ? (stockData.stockPrice * currentCount - stockPrice * countToAdd) / updateCount
+                ? Math.round((stockData.stockPrice * currentCount - stockPrice * countToAdd) / updateCount)
                 : 0;
         }
 
