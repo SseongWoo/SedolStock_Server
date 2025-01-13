@@ -7,6 +7,6 @@ export class Config {
         delistingTime: 5,      // 상장폐지 기간
         percentage: 100,   // 배율
         firstPrice: 100000,// 초기 금액
-        lowerLimit: 10000, // 최소 하한가
+        lowerLimitPersent: 50, // 최소 하한가
     }
 }
