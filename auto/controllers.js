@@ -194,9 +194,11 @@ function initializeCountData(existingData) {
     return {
         totalViewCount: 0,
         totalLikeCount: 0,
+        totalDiff: 0,
         lastTotalViewCount: existingData.totalViewCount || 0,
         lastTotalLikeCount: existingData.totalLikeCount || 0,
         lastPrice: existingData.price || firstPrice,
+        lastDiff: existingData.price || 0,
         price: existingData.price || firstPrice,
         delisting: existingData.delisting || 0,
         updateTime: getTime(),
@@ -216,17 +218,15 @@ function aggregateStatistics(items, countData) {
 function updatePriceDifferences(countData, channelItem) {
     const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
     const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
+    const diffSum = viewDiff + likeDiff;
 
-    // 증가율 계산 (0으로 나누기 방지)
-    const viewRate = viewDiff / (countData.lastTotalViewCount || 1);
-    const likeRate = likeDiff / (countData.lastTotalLikeCount || 1);
+    let diffValue = (diffSum - countData.lastDiff) * percentage;
 
-    // 가격 변동값 계산: 뷰 증가율과 좋아요 증가율의 차이를 기준으로 설정
-    let diffValue = (viewRate - likeRate) * percentage;
-    console.log('(' + viewRate + ' - ' + likeRate + ') * ' + percentage + ' = ' + diffValue);
+    console.log(diffValue + " = (" + diffSum + " - " + countData.lastDiff + ") * " + percentage);
 
     // 하한선 적용
     if (diffValue < -lowerLimit) {
+        console.log(`diffValue: ${diffValue}, lowerLimit: ${lowerLimit}`);
         diffValue = -lowerLimit;
     }
 
