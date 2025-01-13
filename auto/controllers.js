@@ -222,6 +222,10 @@ function updatePriceDifferences(countData, channelItem) {
 
     countData.totalDiff = diffSum;
 
+    if (countData.lastDiff > 1000) {
+        countData.lastDiff = 300;
+    }
+
     let diffValue = (diffSum - countData.lastDiff) * percentage;
 
     console.log(diffValue + " = (" + diffSum + " - " + countData.lastDiff + ") * " + percentage);
