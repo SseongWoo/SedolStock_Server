@@ -370,12 +370,9 @@ export async function updateUserTotalMoney(req, res) {
         // 'users' 컬렉션의 문서 참조 생성
         const userDocRef = db.collection('users').doc(uid);
 
-        // 랭킹 업데이트
-        const rankingRef = realtimeDB.ref(`ranking/${uid}`);
-
-        // 데이터 업데이트
-        await rankingRef.set({
-            totalmoney: totalmoney,
+        const rankingRef = realtimeDB.ref('rankings'); // Realtime Database 참조
+        await rankingRef.child(uid).set({
+            totalMoney: totalmoney,
             fandom: fandom,
         });
 
