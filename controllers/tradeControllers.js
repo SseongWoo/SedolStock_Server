@@ -50,9 +50,9 @@ export async function tryTrade(req, res) {
     const feeRate = tradetype === 'buy' ? Config.FEE_CONFIG.buyFeeRate : Config.FEE_CONFIG.sellFeeRate;
     const totalPrice = itemprice * itemcount;
     const fee = Math.round(totalPrice * feeRate);
-    let totalCost = tradetype === 'buy' ? totalPrice + fee : totalPrice - fee;
+    let totalcost = tradetype === 'buy' ? totalPrice + fee : totalPrice - fee;
 
-    let moneyafter = tradetype === 'buy' ? moneybefore - totalCost : moneybefore + totalCost;
+    let moneyafter = tradetype === 'buy' ? moneybefore - totalcost : moneybefore + totalcost;
 
     if (moneyafter < 0) {
         return res.status(403).json({ message: '오류: 사용자의 보유 재산을 넘는 요청입니다.' });
@@ -73,12 +73,12 @@ export async function tryTrade(req, res) {
             'channelType': channeltype,
             'itemcount': itemcount,
             'transactionprice': transactionprice,
-            'totalCost': totalCost,
+            'totalcost': totalcost,
             'tradeType': tradetype,
             'priceavg': priceavg,
         }, { merge: true });
 
-        await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg, totalCost);
+        await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg, totalcost);
         await updateUserWallet(uid, itemuid, itemcount, transactionprice, tradetype);
         await updateUserMoney(uid, moneyafter);
         await setStockCount(itemuid, uid, itemcount, tradetype);
@@ -91,7 +91,7 @@ export async function tryTrade(req, res) {
 }
 
 // 사용자의 거래 내역 리스트 데이터를 업데이트 하는 작업
-async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, itemUID, channeltype, itemCount, transactionPrice, tradetype, priceAvg, totalCost) {
+async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, itemUID, channeltype, itemCount, transactionPrice, tradetype, priceAvg, totalcost) {
     try {
         const userTradeListDocRef = db.collection('users').doc(uid).collection('trade').doc('0');
         const userTradeDocSnap = await userTradeListDocRef.get();
@@ -106,7 +106,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
             let transactionPriceList = userTradeDocSnap.data().transactionprice || [];
             let tradeTypeList = userTradeDocSnap.data().tradetype || [];
             let priceAvgList = userTradeDocSnap.data().priceavg || [];
-            let totalCostList = userTradeDocSnap.data().totalCost || [];
+            let totalCostList = userTradeDocSnap.data().totalcost || [];
 
             //console.log(moneyAfterList);
 
@@ -121,7 +121,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 transactionPriceList.shift();
                 tradeTypeList.shift();
                 priceAvgList.shift();
-                totalCost.shift();
+                totalCostList.shift();
             }
 
             // 새 데이터를 리스트에 추가
@@ -134,7 +134,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
             transactionPriceList.push(transactionPrice);
             tradeTypeList.push(tradetype);
             priceAvgList.push(priceAvg);
-            totalCostList.push(totalCost);
+            totalCostList.push(totalcost);
 
             // Firestore 문서 업데이트
             await userTradeListDocRef.update({
@@ -162,7 +162,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 'transactionprice': [transactionPrice],
                 'tradetype': [tradetype],
                 'priceavg': [priceAvg],
-                'totalcost': [totalCost],
+                'totalcost': [totalcost],
             });
         }
 
