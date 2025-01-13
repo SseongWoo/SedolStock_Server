@@ -1,4 +1,4 @@
-import { admin, db } from '../firebase_admin.js';
+import { admin, db, realtimeDB } from '../firebase_admin.js';
 import { getDate } from '../utils/date.js';
 import dotenv from 'dotenv';
 
@@ -370,10 +370,10 @@ export async function updateUserTotalMoney(req, res) {
         // 'users' 컬렉션의 문서 참조 생성
         const userDocRef = db.collection('users').doc(uid);
 
-        const rankingRef = realtimeDB.ref('rankings'); // Realtime Database 참조
+        const rankingRef = realtimeDB.ref('ranking'); // Realtime Database 참조
         await rankingRef.child(uid).set({
-            totalMoney: totalmoney,
-            fandom: fandom,
+            totalmoney,
+            fandom,
         });
 
 

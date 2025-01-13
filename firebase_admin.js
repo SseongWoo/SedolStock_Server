@@ -28,13 +28,12 @@ if (!admin.apps.length) {
         databaseURL: realtimeDBURL,        // Realtime Database URL 추가
     });
 }
-console.log(realtimeDBURL);
 
 // Firestore Admin 인스턴스 사용
 const db = admin.firestore();
 const bucket = admin.storage().bucket();
 const FieldValue = admin.firestore.FieldValue; // FieldValue 가져오기
-const realtimeDB = Database.database().reference();
+const realtimeDB = admin.database();
 
 // Firebase Admin과 Firestore를 export
 export { admin, db, bucket, FieldValue, realtimeDB };
