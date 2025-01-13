@@ -52,7 +52,7 @@ export async function tryTrade(req, res) {
     const fee = Math.round(totalPrice * feeRate);
     let totalcost = tradetype === 'buy' ? totalPrice + fee : totalPrice - fee;
     let moneyafter = tradetype === 'buy' ? moneybefore - totalcost : moneybefore + totalcost;
-    let totalPriceAvg = tradetype === 'buy' ? 0 : priceavg + (priceavg * feeRate);
+    let totalPriceAvg = tradetype === 'buy' ? 0 : Math.round(priceavg + (priceavg * feeRate));
 
     if (moneyafter < 0) {
         return res.status(403).json({ message: '오류: 사용자의 보유 재산을 넘는 요청입니다.' });
