@@ -28,6 +28,7 @@ if (!admin.apps.length) {
         databaseURL: realtimeDBURL,        // Realtime Database URL 추가
     });
 }
+console.log(realtimeDBURL);
 
 // Firestore Admin 인스턴스 사용
 const db = admin.firestore();
