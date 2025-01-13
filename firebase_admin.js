@@ -34,7 +34,7 @@ console.log(realtimeDBURL);
 const db = admin.firestore();
 const bucket = admin.storage().bucket();
 const FieldValue = admin.firestore.FieldValue; // FieldValue 가져오기
-const realtimeDB = admin.database();
+const realtimeDB = Database.database().reference();
 
 // Firebase Admin과 Firestore를 export
 export { admin, db, bucket, FieldValue, realtimeDB };
