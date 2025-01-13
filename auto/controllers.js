@@ -220,6 +220,8 @@ function updatePriceDifferences(countData, channelItem) {
     const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
     const diffSum = viewDiff + likeDiff;
 
+    countData.totalDiff = diffSum;
+
     let diffValue = (diffSum - countData.lastDiff) * percentage;
 
     console.log(diffValue + " = (" + diffSum + " - " + countData.lastDiff + ") * " + percentage);
