@@ -24,6 +24,7 @@ const delistingTime = Config.PERCENT_CONFIG.delistingTime;       // 상장폐지
 const percentage = Config.PERCENT_CONFIG.percentage;     // 조회수 배율
 const firstPrice = Config.PERCENT_CONFIG.firstPrice;
 const lowerLimitPercent = Config.PERCENT_CONFIG.lowerLimit;
+const upperLimitPercent = Config.PERCENT_CONFIG.upperLimit;
 
 
 // YouTube API 인스턴스를 생성합니다.
@@ -219,13 +220,10 @@ function updatePriceDifferences(countData, channelItem) {
     const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
     const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
     const diffSum = viewDiff + likeDiff;
-    const lowerLimit = countData.lastPrice * Math.floor(lowerLimitPercent / 100);
+    const lowerLimit = Math.floor(countData.lastPrice * lowerLimitPercent / 100);
+    const upperLimit = Math.floor(countData.lastPrice * upperLimitPercent / 100);
 
     countData.totalDiff = diffSum;
-
-    if (countData.lastDiff > 1000) {
-        countData.lastDiff = 300;
-    }
 
     let diffValue = (diffSum - countData.lastDiff) * percentage;
 
@@ -236,6 +234,11 @@ function updatePriceDifferences(countData, channelItem) {
         console.log(`diffValue: ${diffValue}, lowerLimit: ${lowerLimit}`);
         diffValue = -lowerLimit;
     }
+    // 상한선 적용
+    // else if (diffValue > upperLimit) {
+    //     console.log(`diffValue: ${diffValue}, upperLimit: ${upperLimit}`);
+    //     diffValue = upperLimit;
+    // }
 
     // 상장폐지 상태 처리
     if (countData.delisting > 0) {

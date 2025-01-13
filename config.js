@@ -8,5 +8,6 @@ export class Config {
         percentage: 100,   // 배율
         firstPrice: 100000,// 초기 금액
         lowerLimitPersent: 50, // 최소 하한가
+        upperLimitPersent: 50, // 최대 상한가
     }
 }
