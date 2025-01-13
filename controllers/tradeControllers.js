@@ -76,9 +76,10 @@ export async function tryTrade(req, res) {
             'totalcost': totalcost,
             'tradeType': tradetype,
             'priceavg': priceavg,
+            'fee': fee
         }, { merge: true });
 
-        await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg, totalcost);
+        await updateUserTradeListData(uid, moneybefore, moneyafter, tradetime, itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg, totalcost, fee);
         await updateUserWallet(uid, itemuid, itemcount, transactionprice, tradetype);
         await updateUserMoney(uid, moneyafter);
         await setStockCount(itemuid, uid, itemcount, tradetype);
@@ -91,7 +92,7 @@ export async function tryTrade(req, res) {
 }
 
 // 사용자의 거래 내역 리스트 데이터를 업데이트 하는 작업
-async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, itemUID, channeltype, itemCount, transactionPrice, tradetype, priceAvg, totalcost) {
+async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, itemUID, channeltype, itemCount, transactionPrice, tradetype, priceAvg, totalcost, fee) {
     try {
         const userTradeListDocRef = db.collection('users').doc(uid).collection('trade').doc('0');
         const userTradeDocSnap = await userTradeListDocRef.get();
@@ -107,6 +108,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
             let tradeTypeList = userTradeDocSnap.data().tradetype || [];
             let priceAvgList = userTradeDocSnap.data().priceavg || [];
             let totalCostList = userTradeDocSnap.data().totalcost || [];
+            let feeList = userTradeDocSnap.data().fee || [];
 
             //console.log(moneyAfterList);
 
@@ -122,6 +124,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 tradeTypeList.shift();
                 priceAvgList.shift();
                 totalCostList.shift();
+                feeList.shift();
             }
 
             // 새 데이터를 리스트에 추가
@@ -135,6 +138,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
             tradeTypeList.push(tradetype);
             priceAvgList.push(priceAvg);
             totalCostList.push(totalcost);
+            feeList.push(fee);
 
             // Firestore 문서 업데이트
             await userTradeListDocRef.update({
@@ -148,6 +152,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 'tradetype': tradeTypeList,
                 'priceavg': priceAvgList,
                 'totalcost': totalCostList,
+                'fee': feeList,
             });
 
         } else {
@@ -163,6 +168,7 @@ async function updateUserTradeListData(uid, moneyBefore, moneyAfter, tradeTime, 
                 'tradetype': [tradetype],
                 'priceavg': [priceAvg],
                 'totalcost': [totalcost],
+                'fee': [fee],
             });
         }
 
@@ -195,9 +201,9 @@ async function getUserTradeListData(uid) {
                 'itemuid': '0',
                 'itemcount': 0,
                 'transactionprice': 0,
-                'type': '0',
                 'priceavg': 0,
                 'totalcost': 0,
+                'fee': 0,
             };
             await userTradeDocRef.set(defaultData); // 기본 데이터를 Firestore에 저장
             return defaultData;
