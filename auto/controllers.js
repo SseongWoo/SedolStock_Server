@@ -220,9 +220,13 @@ function updatePriceDifferences(countData, channelItem) {
     const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
     const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
     const diffSum = viewDiff + likeDiff;
-    const lowerLimit = countData.lastPrice != 0 ? Math.round(countData.lastPrice * lowerLimitPercent / 100) : 0;
-    const upperLimit = countData.lastPrice != 0 ? Math.round(countData.lastPrice * upperLimitPercent / 100) : 0;
+    const lowerLimit = countData.lastPrice !== 0
+        ? Math.max(Math.round(countData.lastPrice * lowerLimitPercent / 100), 100)
+        : 0;
 
+    const upperLimit = countData.lastPrice !== 0
+        ? Math.max(Math.round(countData.lastPrice * upperLimitPercent / 100), 100)
+        : 0;
     console.log('countData.lastPrice = ' + countData.lastPrice + ', lowerLimit = ' + lowerLimit + ', upperLimit = ' + upperLimit + ', lowerLimitPercent = ' + lowerLimitPercent + ', upperLimitPercent = ' + upperLimitPercent);
 
     countData.totalDiff = diffSum;
