@@ -1,7 +1,4 @@
-import { setRankData, updateLatestVideoInfo, updateVideoData, startDeleteUserData } from './controllers.js';
-
-// 랭킹 업데이트
-await setRankData();
+import { updateLatestVideoInfo, updateVideoData, startDeleteUserData } from './controllers.js';
 
 // 채널의 영상들 업데이트
 await updateVideoData();
