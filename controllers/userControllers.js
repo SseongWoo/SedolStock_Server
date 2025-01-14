@@ -267,14 +267,18 @@ export async function updateName(req, res) {
 }
 
 export async function updateChoiceChannel(req, res) {
-    const { uid, name } = req.body; // 입력에서 필요한 필드만 추출
+    const { uid, originalFandom, newFandom } = req.body; // 입력에서 필요한 필드만 추출
 
     try {
         const userDocRef = db.collection('users').doc(uid);
 
         // Firebase Admin SDK를 사용하여 작업 수행
         // 사용자 문서에 'choicechannel' 필드를 업데이트
-        await userDocRef.update({ 'choicechannel': name });
+        await userDocRef.update({ 'choicechannel': newFandom });
+
+        // 팬덤별 랭킹에 저장
+        const fandomRankingRef = realtimeDB.ref(`ranking/fandoms/${originalFandom}`);
+        await fandomRankingRef.child(uid).remove();
 
         res.status(200).json({ message: 'User choice channel updated successfully' });
     } catch (error) {
@@ -370,12 +374,19 @@ export async function updateUserTotalMoney(req, res) {
         // 'users' 컬렉션의 문서 참조 생성
         const userDocRef = db.collection('users').doc(uid);
 
-        const rankingRef = realtimeDB.ref('ranking'); // Realtime Database 참조
+        // 전체 랭킹에 저장
+        const rankingRef = realtimeDB.ref('ranking/global');
         await rankingRef.child(uid).set({
             totalmoney,
             fandom,
         });
 
+        // 팬덤별 랭킹에 저장
+        const fandomRankingRef = realtimeDB.ref(`ranking/fandoms/${fandom}`);
+        await fandomRankingRef.child(uid).set({
+            totalmoney,
+            fandom,
+        });
 
         // 사용자 데이터를 Firestore에 저장
         await userDocRef.update({ totalmoney });
