@@ -500,64 +500,69 @@ export async function updateLatestVideoInfo() {
     }
 }
 
+// // 랭킹 데이터 갱신
+// export async function setRankData() {
+//     try {
+//         const usersSnapshot = await db.collection('users')
+//             .orderBy('totalmoney', 'desc')
+//             .orderBy('rank', 'asc')
+//             .orderBy('beforerank', 'asc')
+//             .orderBy('uid', 'asc')
+//             .limit(100)
+//             .get();
+
+//         const userList = [];
+//         let rank = 1;
+
+//         // Firestore 업데이트 작업을 병렬로 수행하기 위한 프로미스 배열
+//         const updatePromises = [];
+
+//         for (const doc of usersSnapshot.docs) {
+//             const data = doc.data();
+
+//             userList.push({
+//                 rank: rank,
+//                 name: data.name,
+//                 totalmoney: data.totalmoney,
+//                 beforerank: data.beforerank !== undefined ? data.beforerank : 0,
+//                 choicechannel: data.choicechannel,
+//             });
+
+//             const userDocRef = db.collection('users').doc(data.uid);
+//             const updatePromise = userDocRef.update({
+//                 rank: rank,
+//                 beforerank: data.rank !== undefined ? data.rank : 0
+//             });
+//             updatePromises.push(updatePromise);
+
+//             rank++;
+//         }
+
+//         await Promise.all(updatePromises);
+
+//         await updateJson('../json/ranking.json', { users: userList, 'updatedate': getDate() });
+//         const rankingDocRef = db.collection('rank').doc('0ranking');
+//         await rankingDocRef.set({ users: userList, 'updatedate': getDate() });
+
+//         const rankListDocRef = db.collection('rank').doc(getDayName());
+//         await rankListDocRef.set({ users: userList, 'updatedate': getDate() });
+
+//         console.log(`setRankData : updateRank ${getDate()}`);
+//     } catch (error) {
+//         console.error('Error fetching top users:', error);
+//     }
+// }
+
 // 랭킹 데이터 갱신
 export async function setRankData() {
-    try {
-        const usersSnapshot = await db.collection('users')
-            .orderBy('totalmoney', 'desc')
-            .orderBy('rank', 'asc')
-            .orderBy('beforerank', 'asc')
-            .orderBy('uid', 'asc')
-            .limit(100)
-            .get();
-
-        const userList = [];
-        let rank = 1;
-
-        // Firestore 업데이트 작업을 병렬로 수행하기 위한 프로미스 배열
-        const updatePromises = [];
-
-        for (const doc of usersSnapshot.docs) {
-            const data = doc.data();
-
-            userList.push({
-                rank: rank,
-                name: data.name,
-                totalmoney: data.totalmoney,
-                beforerank: data.beforerank !== undefined ? data.beforerank : 0,
-                choicechannel: data.choicechannel,
-            });
-
-            const userDocRef = db.collection('users').doc(data.uid);
-            const updatePromise = userDocRef.update({
-                rank: rank,
-                beforerank: data.rank !== undefined ? data.rank : 0
-            });
-            updatePromises.push(updatePromise);
-
-            rank++;
-        }
-
-        await Promise.all(updatePromises);
-
-        await updateJson('../json/ranking.json', { users: userList, 'updatedate': getDate() });
-        const rankingDocRef = db.collection('rank').doc('0ranking');
-        await rankingDocRef.set({ users: userList, 'updatedate': getDate() });
-
-        const rankListDocRef = db.collection('rank').doc(getDayName());
-        await rankListDocRef.set({ users: userList, 'updatedate': getDate() });
-
-        console.log(`setRankData : updateRank ${getDate()}`);
-    } catch (error) {
-        console.error('Error fetching top users:', error);
-    }
-}
-
-// 랭킹 데이터 갱신
-export async function newsetRankData() {
     const fandomList = ['팬치', '이파리', '둘기', '똥강아지', '박쥐단', '주폭도', '세균단', '라니'];
     try {
+        // Firestore batch 작업 시작
+        const batch = db.batch();
         const rankings = {};
+        const date = getDate();
+        const time = getTime();
+        const dayName = getDayName();
 
         // 전체(Global) 상위 100명 가져오기
         const globalSnapshot = await realtimeDB.ref('ranking/global')
@@ -577,8 +582,13 @@ export async function newsetRankData() {
             rankings[fandom] = extractRankingData(fandomSnapshot);
         }
 
+        const rankingsData = {
+            ranking: rankings,
+            updatedate: time
+        };
+
         // JSON 파일로 저장
-        await updateJson('../json/rankings.json', rankings);
+        await updateJson('../json/rankings.json', rankingsData);
 
         // 글로벌 랭킹 저장
         const globalRef = db.collection('rank').doc('ranking_global');

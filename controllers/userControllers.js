@@ -23,9 +23,7 @@ export async function signUpUserData(req, res) {
             id,
             firstlogintime,
             money,
-            'rank': 0,
             'totalmoney': money,
-            'beforerank': 0,
             name,
             choicechannel,
         });
@@ -64,9 +62,7 @@ export async function signUpUserData1(req, res) {
             id,
             firstlogintime,
             money,
-            'rank': 0,
             'totalmoney': money,
-            'beforerank': 0,
         });
 
         await totalmoneyDocRef.set({
@@ -359,7 +355,7 @@ export async function getUserWallet(req, res) {
 
 export async function updateUserTotalMoney(req, res) {
     const { uid } = req.params;
-    const { totalmoney, fandom, rank } = req.body;
+    const { totalmoney, fandom } = req.body;
 
     // 유효성 검사 추가
     if (!uid) {
@@ -379,7 +375,6 @@ export async function updateUserTotalMoney(req, res) {
         await rankingRef.child(uid).set({
             totalmoney,
             fandom,
-            beforerank: rank,
         });
 
         // 팬덤별 랭킹에 저장
@@ -387,7 +382,6 @@ export async function updateUserTotalMoney(req, res) {
         await fandomRankingRef.child(uid).set({
             totalmoney,
             fandom,
-            beforerank: rank,
         });
 
         // 사용자 데이터를 Firestore에 저장
@@ -464,9 +458,7 @@ export async function restartUserData(req, res) {
         // 사용자 문서 업데이트
         await userDocRef.update({
             money: initialMoney,
-            'rank': 0,
             'totalmoney': initialMoney,
-            'beforerank': 0,
         });
 
         // totalmoneyhistory에 초기 데이터 삽입
