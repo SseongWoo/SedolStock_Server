@@ -198,7 +198,7 @@ function initializeCountData(existingData) {
         totalDiff: 0,
         lastTotalViewCount: existingData.totalViewCount || 0,
         lastTotalLikeCount: existingData.totalLikeCount || 0,
-        lastPrice: existingData.price || firstPrice,
+        lastPrice: existingData.price || 0,
         lastDiff: existingData.totalDiff || 0,
         price: existingData.price || firstPrice,
         delisting: existingData.delisting || 0,
@@ -220,8 +220,8 @@ function updatePriceDifferences(countData, channelItem) {
     const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
     const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
     const diffSum = viewDiff + likeDiff;
-    const lowerLimit = Math.floor(countData.lastPrice * lowerLimitPercent / 100);
-    const upperLimit = Math.floor(countData.lastPrice * upperLimitPercent / 100);
+    const lowerLimit = countData.lastPrice != 0 ? Math.round(countData.lastPrice * lowerLimitPercent / 100) : 0;
+    const upperLimit = countData.lastPrice != 0 ? Math.round(countData.lastPrice * upperLimitPercent / 100) : 0;
 
     console.log('lowerLimit = ' + lowerLimit + ', upperLimit = ' + upperLimit);
 
@@ -232,12 +232,12 @@ function updatePriceDifferences(countData, channelItem) {
     console.log(diffValue + " = (" + diffSum + " - " + countData.lastDiff + ") * " + percentage);
 
     // 하한선 적용
-    if (diffValue < -lowerLimit) {
+    if (lowerLimit != 0 && diffValue < -lowerLimit) {
         console.log(`diffValue: ${diffValue}, lowerLimit: ${lowerLimit}`);
         diffValue = -lowerLimit;
     }
     //상한선 적용
-    else if (diffValue > upperLimit) {
+    else if (upperLimit != 0 && diffValue > upperLimit) {
         console.log(`diffValue: ${diffValue}, upperLimit: ${upperLimit}`);
         diffValue = upperLimit;
     }
