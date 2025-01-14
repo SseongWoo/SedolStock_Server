@@ -371,7 +371,7 @@ export async function updateUserTotalMoney(req, res) {
         const userDocRef = db.collection('users').doc(uid);
 
         // 전체 랭킹에 저장
-        const rankingRef = realtimeDB.ref('ranking/global');
+        const rankingRef = realtimeDB.ref('ranking/전체');
         await rankingRef.child(uid).set({
             totalmoney,
             fandom,

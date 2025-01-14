@@ -568,13 +568,13 @@ export async function setRankData() {
         const time = getTime2();
         const dayName = getDayName();
 
-        // 전체(Global) 상위 100명 가져오기
-        const globalSnapshot = await realtimeDB.ref('ranking/global')
+        // 전체(전체) 상위 100명 가져오기
+        const globalSnapshot = await realtimeDB.ref('ranking/전체')
             .orderByChild('totalmoney')
             .limitToLast(100)
             .once('value');
 
-        rankings.global = extractRankingData(globalSnapshot);
+        rankings['전체'] = extractRankingData(globalSnapshot);
 
         // 각 팬덤별 상위 100명 가져오기
         for (const fandom of fandomList) {
@@ -594,16 +594,16 @@ export async function setRankData() {
         // JSON 파일로 저장
         await updateJson('../json/rankings.json', rankingsData);
 
-        // 글로벌 랭킹 저장
-        const globalRef = db.collection('rank').doc('ranking_global');
-        batch.set(globalRef, { users: rankings.global, updatedate: date });
+        // 전체 랭킹 저장
+        const globalRef = db.collection('rank').doc('ranking_전체');
+        batch.set(globalRef, { users: rankings['전체'], updatedate: date });
 
-        // 글로벌 히스토리 저장
+        // 전체 히스토리 저장
         const globalHistoryRef = db.collection('rank')
             .doc('history')
             .collection(dayName)
-            .doc('ranking_global');
-        batch.set(globalHistoryRef, { users: rankings.global, updatedate: date });
+            .doc('ranking_전체');
+        batch.set(globalHistoryRef, { users: rankings['전체'], updatedate: date });
 
         // 각 팬덤별 랭킹 저장
         for (const fandom of fandomList) {
@@ -631,7 +631,7 @@ export async function setRankData() {
 function extractRankingData(snapshot) {
     if (!snapshot.exists()) return []; // 데이터가 없을 경우 빈 배열 반환
 
-    const rankingData = [];
+    const rankingData = []; ç
     let rank = 1; // 순위는 1부터 시작
 
     snapshot.forEach(childSnapshot => {
