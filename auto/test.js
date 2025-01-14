@@ -1,9 +1,8 @@
 //import { startDeleteUserData } from '../controllers/authControllers.js'
 // import { setRankData } from '../controllers/rankControllers.js'
 // import { google } from 'googleapis';
-import { updateLiveData } from "./controllers.js";
+import { newsetRankData } from "./controllers.js";
 import { getLatestVideoInfo } from "../controllers/youtubeControllers.js"
-import { testFun } from "../controllers/userControllers.js"
 
 // // YouTube API 인스턴스를 생성합니다.
 // const youtube = google.youtube({
@@ -44,4 +43,4 @@ import { testFun } from "../controllers/userControllers.js"
 
 // getChannelIdByName();
 
-testFun();
+newsetRankData();

@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 // .env 파일 경로 설정
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import { google } from 'googleapis';
-import { db } from '../firebase_admin.js';
+import { db, realtimeDB } from '../firebase_admin.js';
 import { getDate, getTime, getDayName, newGetTime } from '../utils/date.js';
 import { controllVersionFile, updateJson, getJson } from '../utils/file.js'
 import { Config } from '../config.js';
@@ -553,7 +553,85 @@ export async function setRankData() {
     }
 }
 
+// 랭킹 데이터 갱신
+export async function newsetRankData() {
+    const fandomList = ['팬치', '이파리', '둘기', '똥강아지', '박쥐단', '주폭도', '세균단', '라니'];
+    try {
+        const rankings = {};
 
+        // 전체(Global) 상위 100명 가져오기
+        const globalSnapshot = await realtimeDB.ref('ranking/global')
+            .orderByChild('totalmoney')
+            .limitToLast(100)
+            .once('value');
+
+        rankings.global = extractRankingData(globalSnapshot);
+
+        // 각 팬덤별 상위 100명 가져오기
+        for (const fandom of fandomList) {
+            const fandomSnapshot = await realtimeDB.ref(`ranking/fandom/${fandom}`)
+                .orderByChild('totalmoney')
+                .limitToLast(100)
+                .once('value');
+
+            rankings[fandom] = extractRankingData(fandomSnapshot);
+        }
+
+        // JSON 파일로 저장
+        await updateJson('../json/rankings.json', rankings);
+
+        // 글로벌 랭킹 저장
+        const globalRef = db.collection('rank').doc('ranking_global');
+        batch.set(globalRef, { users: rankings.global, updatedate: date });
+
+        // 글로벌 히스토리 저장
+        const globalHistoryRef = db.collection('rank')
+            .doc('history')
+            .collection(dayName)
+            .doc('ranking_global');
+        batch.set(globalHistoryRef, { users: rankings.global, updatedate: date });
+
+        // 각 팬덤별 랭킹 저장
+        for (const fandom of fandomList) {
+            const fandomRef = db.collection('rank').doc(`ranking_${fandom}`);
+            batch.set(fandomRef, { users: rankings[fandom], updatedate: date });
+
+            // 팬덤별 히스토리 저장
+            const fandomHistoryRef = db.collection('rank')
+                .doc('history')
+                .collection(dayName)
+                .doc(`ranking_${fandom}`);
+            batch.set(fandomHistoryRef, { users: rankings[fandom], updatedate: date });
+        }
+
+        // ✅ Firestore에 일괄 커밋
+        await batch.commit();
+
+        console.log('Rankings exported to rankings.json');
+    } catch (error) {
+        console.error('Error exporting rankings:', error);
+    }
+}
+
+// 유틸리티 함수: 스냅샷 데이터를 배열로 변환
+function extractRankingData(snapshot) {
+    if (!snapshot.exists()) return []; // 데이터가 없을 경우 빈 배열 반환
+
+    const rankingData = [];
+    let rank = 1; // 순위는 1부터 시작
+
+    snapshot.forEach(childSnapshot => {
+        const data = childSnapshot.val();
+        rankingData.push({
+            uid: childSnapshot.key,
+            rank: rank++, // 순위를 1씩 증가
+            totalmoney: data.totalmoney,
+            fandom: data.fandom
+        });
+    });
+
+    return rankingData.reverse(); // 내림차순 가져온 데이터의 순서를 다시 정렬
+}
 
 export async function startDeleteUserData() {
     try {
