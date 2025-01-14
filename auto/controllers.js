@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import { google } from 'googleapis';
 import { db, realtimeDB } from '../firebase_admin.js';
-import { getDate, getTime, getDayName, newGetTime } from '../utils/date.js';
+import { getDate, getTime, getDayName, newGetTime, getTime2 } from '../utils/date.js';
 import { controllVersionFile, updateJson, getJson } from '../utils/file.js'
 import { Config } from '../config.js';
 
@@ -561,7 +561,7 @@ export async function setRankData() {
         const batch = db.batch();
         const rankings = {};
         const date = getDate();
-        const time = getTime();
+        const time = getTime2();
         const dayName = getDayName();
 
         // 전체(Global) 상위 100명 가져오기
