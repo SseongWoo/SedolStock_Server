@@ -223,6 +223,8 @@ function updatePriceDifferences(countData, channelItem) {
     const lowerLimit = Math.floor(countData.lastPrice * lowerLimitPercent / 100);
     const upperLimit = Math.floor(countData.lastPrice * upperLimitPercent / 100);
 
+    console.log('lowerLimit = ' + lowerLimit + ', upperLimit = ' + upperLimit);
+
     countData.totalDiff = diffSum;
 
     let diffValue = (diffSum - countData.lastDiff) * percentage;
