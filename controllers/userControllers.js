@@ -277,7 +277,7 @@ export async function updateChoiceChannel(req, res) {
         await userDocRef.update({ 'choicechannel': newFandom });
 
         // 팬덤 랭킹에서 사용자 데이터 삭제
-        const fandomRankingRef = realtimeDB.ref(`ranking/fandoms/${originalFandom}`);
+        const fandomRankingRef = realtimeDB.ref(`ranking/fandom/${originalFandom}`);
         await fandomRankingRef.child(uid).remove();
 
         res.status(200).json({ message: 'User choice channel updated successfully' });
@@ -382,7 +382,7 @@ export async function updateUserTotalMoney(req, res) {
         });
 
         // 팬덤별 랭킹에 저장
-        const fandomRankingRef = realtimeDB.ref(`ranking/fandoms/${fandom}`);
+        const fandomRankingRef = realtimeDB.ref(`ranking/fandom/${fandom}`);
         await fandomRankingRef.child(uid).set({
             totalmoney,
             fandom,

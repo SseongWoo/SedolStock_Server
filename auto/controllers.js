@@ -553,6 +553,8 @@ export async function setRankData() {
     }
 }
 
+
+
 export async function startDeleteUserData() {
     try {
         // 일주일 전의 날짜 계산
@@ -587,6 +589,7 @@ export async function startDeleteUserData() {
                     // 'trade'와 'wallet' 컬렉션의 하위 문서 삭제
                     await deleteSubcollection(db.collection('users').doc(uid).collection('trade'));
                     await deleteSubcollection(db.collection('users').doc(uid).collection('wallet'));
+                    await deleteSubcollection(db.collection('users').doc(uid).collection('message'));
                     await db.collection('users').doc(uid).delete();
                     console.log(`User document and subcollections for UID: ${uid} deleted successfully.`);
                 } catch (error) {

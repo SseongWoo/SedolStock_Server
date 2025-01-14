@@ -1,6 +1,6 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, getAuth, sendPasswordResetEmail, updatePassword, sendEmailVerification, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { auth, firebaseConfig } from '../firebase.js';
-import { admin, db } from '../firebase_admin.js';
+import { admin, db, realtimeDB } from '../firebase_admin.js';
 import { getDate } from '../utils/date.js'
 import axios from 'axios';
 
@@ -121,7 +121,7 @@ export async function checkEmail(req, res) {
 }
 
 export async function deleteUserAuth(req, res) {
-    const { uid, name } = req.body;
+    const { uid, name, fandom } = req.body;
 
     try {
         const nameDocRef = db.collection('delete').doc(getDate());
@@ -132,6 +132,12 @@ export async function deleteUserAuth(req, res) {
         if (nameDocSnap.exists) {
             //await admin.auth().deleteUser(uid);
             try {
+                // 랭킹 데이터 삭제
+                const rankingRef = realtimeDB.ref(`ranking/global/`);
+                await rankingRef.child(uid).remove();
+                const fandomRankingRef = realtimeDB.ref(`ranking/fandoms/${fandom}`);
+                await fandomRankingRef.child(uid).remove();
+
                 const userRecord = await admin.auth().getUser(uid);
                 console.log(`User found: ${userRecord.uid}`);
                 await admin.auth().deleteUser(uid);
