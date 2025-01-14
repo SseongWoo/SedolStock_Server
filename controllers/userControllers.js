@@ -276,7 +276,7 @@ export async function updateChoiceChannel(req, res) {
         // 사용자 문서에 'choicechannel' 필드를 업데이트
         await userDocRef.update({ 'choicechannel': newFandom });
 
-        // 팬덤별 랭킹에 저장
+        // 팬덤 랭킹에서 사용자 데이터 삭제
         const fandomRankingRef = realtimeDB.ref(`ranking/fandoms/${originalFandom}`);
         await fandomRankingRef.child(uid).remove();
 
