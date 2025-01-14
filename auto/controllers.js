@@ -640,7 +640,8 @@ function extractRankingData(snapshot) {
             uid: childSnapshot.key,
             rank: rank++, // 순위를 1씩 증가
             totalmoney: data.totalmoney,
-            fandom: data.fandom
+            fandom: data.fandom,
+            name: data.name,
         });
     });
 
