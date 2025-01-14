@@ -23,8 +23,8 @@ const packageAPIKEY = path.resolve(__dirname, process.env.APP_API_KEY);
 const delistingTime = Config.PERCENT_CONFIG.delistingTime;       // 상장폐지 기간
 const percentage = Config.PERCENT_CONFIG.percentage;     // 조회수 배율
 const firstPrice = Config.PERCENT_CONFIG.firstPrice;
-const lowerLimitPercent = Config.PERCENT_CONFIG.lowerLimit;
-const upperLimitPercent = Config.PERCENT_CONFIG.upperLimit;
+const lowerLimitPercent = Config.PERCENT_CONFIG.lowerLimitPersent;
+const upperLimitPercent = Config.PERCENT_CONFIG.upperLimitPersent;
 
 
 // YouTube API 인스턴스를 생성합니다.
