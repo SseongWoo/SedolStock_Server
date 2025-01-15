@@ -152,6 +152,7 @@ export async function updateLiveData() {
         // 각 채널의 데이터를 병렬로 처리
         for (const channelItem of channelIdList) {
             promises.push((async () => {
+                console.log(channelItem);
                 // 채널의 비디오 ID 가져오기
                 const videoIds = videoIdsByChannel[channelItem]?.join(',');
                 if (!videoIds) return;
@@ -227,7 +228,6 @@ function updatePriceDifferences(countData, channelItem) {
     const upperLimit = countData.lastPrice !== 0
         ? Math.max(Math.round(countData.lastPrice * upperLimitPercent / 100), 100)
         : 0;
-    console.log('countData.lastPrice = ' + countData.lastPrice + ', lowerLimit = ' + lowerLimit + ', upperLimit = ' + upperLimit + ', lowerLimitPercent = ' + lowerLimitPercent + ', upperLimitPercent = ' + upperLimitPercent);
 
     countData.totalDiff = diffSum;
 
