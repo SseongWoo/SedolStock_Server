@@ -1,3 +1,5 @@
-import { setRankData } from "./controllers.js";
+import { setRankData, getConfigConstant } from "./controllers.js";
 
-setRankData();
+await setRankData();
+
+await getConfigConstant()

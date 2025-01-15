@@ -13,19 +13,11 @@ import { google } from 'googleapis';
 import { db, realtimeDB } from '../firebase_admin.js';
 import { getDate, getTime, getDayName, newGetTime, getTime2 } from '../utils/date.js';
 import { controllVersionFile, updateJson, getJson } from '../utils/file.js'
-import { Config } from '../config.js';
 
 const apiKey = process.env.YOUTUBE_API_KEY;
 const channelIdList = process.env.CHANNEL_ID_LIST ? process.env.CHANNEL_ID_LIST.split(',') : [];
 const packageName = process.env.APP_PACKAGE_NAME;
 const packageAPIKEY = path.resolve(__dirname, process.env.APP_API_KEY);
-
-const delistingTime = Config.PERCENT_CONFIG.delistingTime;       // 상장폐지 기간
-const percentage = Config.PERCENT_CONFIG.percentage;     // 조회수 배율
-const firstPrice = Config.PERCENT_CONFIG.firstPrice;
-const lowerLimitPercent = Config.PERCENT_CONFIG.lowerLimitPersent;
-const upperLimitPercent = Config.PERCENT_CONFIG.upperLimitPersent;
-
 
 // YouTube API 인스턴스를 생성합니다.
 const youtube = google.youtube({
@@ -115,6 +107,10 @@ export async function updateLiveData() {
         const lastDoc = await getJson('../json/liveData.json');
         const chartDataDoc = await getJson('../json/liveChart.json');
         const videoListDoc = await getJson('../json/videoList.json');
+        const configDoc = await getJson('../json/config_constant.json');
+        const eventDoc = await getJson('../json/event.json');
+
+        console.log(configDoc);
 
         // 데이터 확인
         if (!videoListDoc || Object.keys(videoListDoc).length === 0) {
@@ -152,7 +148,18 @@ export async function updateLiveData() {
         // 각 채널의 데이터를 병렬로 처리
         for (const channelItem of channelIdList) {
             promises.push((async () => {
-                console.log(channelItem);
+                // 채널의 이벤트 유무 가져오기
+                let multiplier = 1;
+                for (const event of eventDoc.events) {
+                    // 현재 채널이 이벤트 채널 목록에 포함되어 있는지 확인
+                    if (event.channel.includes(channelItem)) {
+                        if (multiplier < event.multiplier) {
+                            multiplier = event.multiplier;
+                            console.log(`Applying event: ${event.title} with multiplier ${event.multiplier}`);
+                        }
+                    }
+                }
+
                 // 채널의 비디오 ID 가져오기
                 const videoIds = videoIdsByChannel[channelItem]?.join(',');
                 if (!videoIds) return;
@@ -162,13 +169,13 @@ export async function updateLiveData() {
 
                 // 기존 데이터 가져오기
                 const existingData = countMapData[channelItem] || {};
-                countMap[channelItem] = initializeCountData(existingData);
+                countMap[channelItem] = initializeCountData(existingData, configDoc.firstprice);
 
                 // 통계 데이터 집계
                 aggregateStatistics(response.data.items, countMap[channelItem]);
 
                 // 차이 및 가격 업데이트
-                updatePriceDifferences(countMap[channelItem], channelItem);
+                updatePriceDifferences(countMap[channelItem], channelItem, configDoc, multiplier);
                 updateChartDataList(chartDataList, channelItem, countMap[channelItem]);
             })().catch(error => console.error(`Error fetching data for channel ${channelItem}:`, error)));
         }
@@ -192,7 +199,7 @@ export async function updateLiveData() {
 }
 
 // 유틸 함수: 초기 countMap 데이터 설정
-function initializeCountData(existingData) {
+function initializeCountData(existingData, firstPrice) {
     return {
         totalViewCount: 0,
         totalLikeCount: 0,
@@ -217,23 +224,21 @@ function aggregateStatistics(items, countData) {
 }
 
 // 유틸 함수: 가격 업데이트
-function updatePriceDifferences(countData, channelItem) {
+function updatePriceDifferences(countData, channelItem, configDoc, multiplier) {
     const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
     const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
     const diffSum = viewDiff + likeDiff;
     const lowerLimit = countData.lastPrice !== 0
-        ? Math.max(Math.round(countData.lastPrice * lowerLimitPercent / 100), 100)
+        ? Math.max(Math.round(countData.lastPrice * configDoc.limitpersentlower / 100), 100)
         : 0;
 
     const upperLimit = countData.lastPrice !== 0
-        ? Math.max(Math.round(countData.lastPrice * upperLimitPercent / 100), 100)
+        ? Math.max(Math.round(countData.lastPrice * configDoc.limitpersentupper / 100), 100)
         : 0;
 
     countData.totalDiff = diffSum;
 
-    let diffValue = (diffSum - countData.lastDiff) * percentage;
-
-    console.log(diffValue + " = (" + diffSum + " - " + countData.lastDiff + ") * " + percentage);
+    let diffValue = (diffSum - countData.lastDiff) * configDoc.pricepercentage;
 
     // 하한선 적용
     if (lowerLimit != 0 && diffValue < -lowerLimit) {
@@ -252,16 +257,20 @@ function updatePriceDifferences(countData, channelItem) {
         countData.delisting--;
 
         if (countData.delisting <= 0) {
-            countData.price = firstPrice;
+            countData.price = countData.firstprice;
         }
     } else {
+        if (multiplier > 1 && diffValue > 0) {
+            diffValue = Math.round(diffValue * multiplier);
+        }
+
         // 가격 업데이트
         countData.price += diffValue;
 
         // 가격이 0 이하일 경우 상장폐지 처리
         if (countData.price <= 0) {
             countData.price = 0;
-            countData.delisting = delistingTime;
+            countData.delisting = countData.delistingtime;
             deleteDelistingStock(channelItem);
         }
     }
@@ -767,5 +776,56 @@ export async function getPlayStoreVersion() {
     } catch (error) {
         console.error('Error fetching version info:', error.message);
         throw error;
+    }
+}
+
+// 설정파일을 파이어베이스에서 가져옴
+export async function getConfigConstant() {
+    try {
+        const constantDocRef = db.collection('config').doc('constant');
+        const constantDocSnap = await constantDocRef.get();
+
+        if (!constantDocSnap.exists) {
+            console.error('No constant document found in Firestore.');
+            return;
+        }
+
+        // 문서 데이터를 가져와 JSON 파일로 변환
+        const constantData = constantDocSnap.data();
+
+        await updateJson('../json/config_constant.json', constantData);
+
+        console.log(`JSON file saved at config_constant.json`);
+    } catch (error) {
+        console.error('Error exporting config to JSON:', error);
+    }
+}
+
+// 이벤트 데이터 구조 = 이벤트날짜, 적용 채널, 배율, 제목, 내용,
+
+export async function getTodayEvents() {
+    try {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+        const eventsRef = db.collection('config').doc('event').collection(today);
+
+        const snapshot = await eventsRef.get();
+
+        if (snapshot.empty) {
+            console.log('No events found for today.');
+            return [];
+        }
+
+        const events = [];
+        snapshot.forEach(doc => {
+            events.push({ id: doc.id, ...doc.data() });
+        });
+
+        console.log('Today’s events:', events);
+
+        const eventData = { date: today, events };
+        await updateJson(path.resolve(__dirname, '../json/event.json'), eventData);
+
+    } catch (error) {
+        console.error('Error fetching today’s events:', error);
     }
 }

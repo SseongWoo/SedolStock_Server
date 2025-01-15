@@ -1,6 +1,5 @@
 import { db } from '../firebase_admin.js';
 import { controllVersionFile } from '../utils/file.js'
-import { Config } from '../config.js';
 
 export async function checkRunningServer(req, res) {
     //const version = await checkVersion();
@@ -10,12 +9,9 @@ export async function checkRunningServer(req, res) {
 
 export async function getConstantsData(req, res) {
     try {
-        // Config 클래스의 데이터 가져오기
-        const constantsData = {
-            feeConfig: Config.FEE_CONFIG,
-            percentConfig: Config.PERCENT_CONFIG,
-        };
-        res.status(200).send({ message: 'Server is running', data: constantsData });
+        const configDoc = await getJson('../json/config_constant.json');
+
+        res.status(200).send({ message: 'Server is running', data: configDoc });
     } catch (error) {
         console.error("Error getConstantsData:", error);
         // 에러 발생 시 500 응답

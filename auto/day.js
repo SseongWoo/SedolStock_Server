@@ -1,4 +1,6 @@
-import { updateLatestVideoInfo, updateVideoData, startDeleteUserData } from './controllers.js';
+import { updateLatestVideoInfo, updateVideoData, startDeleteUserData, getTodayEvents } from './controllers.js';
+
+await getTodayEvents();
 
 // 채널의 영상들 업데이트
 await updateVideoData();
