@@ -1,5 +1,6 @@
 import { db } from '../firebase_admin.js';
 import { controllVersionFile } from '../utils/file.js'
+import { getJson } from '../utils/file.js'
 
 export async function checkRunningServer(req, res) {
     const version = await controllVersionFile('get');
@@ -9,8 +10,6 @@ export async function checkRunningServer(req, res) {
 export async function getConstantsData(req, res) {
     try {
         const configDoc = await getJson('../json/config_constant.json');
-
-        console.log('configDoc = ' + configDoc);
 
         res.status(200).send({ message: 'Success get ConstantsData', data: configDoc });
     } catch (error) {
