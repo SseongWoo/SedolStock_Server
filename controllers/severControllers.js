@@ -10,6 +10,8 @@ export async function getConstantsData(req, res) {
     try {
         const configDoc = await getJson('../json/config_constant.json');
 
+        console.log('configDoc = ' + configDoc);
+
         res.status(200).send({ message: 'Success get ConstantsData', data: configDoc });
     } catch (error) {
         console.error("Error getConstantsData:", error);
