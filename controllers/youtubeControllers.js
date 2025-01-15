@@ -20,39 +20,6 @@ const youtube = google.youtube({
 const channelIdList = process.env.CHANNEL_ID_LIST.split(',');
 
 
-// 유튜브 채널의 uid 가져오기
-export async function getChannelIdByName(req, res) {
-    const { channelName } = req.body;
-
-    if (!channelName) {
-        return res.status(400).json({ message: 'channelName is required' });
-    }
-
-    try {
-        // YouTube Data API를 사용하여 채널 검색
-        const response = await youtube.search.list({
-            part: 'snippet',
-            q: channelName,          // 검색어로 채널 이름을 입력
-            type: 'channel',         // 채널 유형으로 제한
-            maxResults: 1            // 첫 번째 검색 결과만 가져옵니다.
-        });
-
-        // 검색 결과에서 채널 ID 추출
-        const channels = response.data.items;
-        if (channels.length > 0) {
-            const channelId = channels[0].snippet.channelId;
-            return res.status(200).json({ message: `Channel ID for "${channelName}" found`, channelId: channelId });
-        } else {
-            return res.status(404).json({ message: `No channel found with the name: ${channelName}` });
-        }
-    } catch (error) {
-        console.error('Error fetching channel ID:', error);
-        return res.status(500).json({ message: 'Error fetching channel ID', error: error.message });
-    }
-}
-
-
-
 export async function getChannelInfoData(req, res) {
     try {
         // // Firestore에서 특정 문서(채널 ID '0')에 해당하는 데이터 가져오기

@@ -3,7 +3,7 @@ import cors from 'cors';
 import { signUpUser, signInUser, resetPassword, changePassword, sendEmail, checkEmail, deleteUserAuth, tokenLogin } from './controllers/authControllers.js';
 import { getUserData, signUpUserData1, signUpUserData2, searchName, updateName, getUserWallet, updateUserTotalMoney, updateChoiceChannel, restartUserData, getUserMessageData, deleteMessageData, deleteAllMessage, deleteUser, signUpUserData } from './controllers/userControllers.js';
 import { getUserTradeDataList, tryTrade } from './controllers/tradeControllers.js';
-import { getChannelIdByName, getChannelInfoData, getVideoData, getLiveData, getLatestVideoInfo } from './controllers/youtubeControllers.js';
+import { getChannelInfoData, getVideoData, getLiveData, getLatestVideoInfo } from './controllers/youtubeControllers.js';
 import { getRankData } from './controllers/rankControllers.js'
 import { checkRunningServer, getConstantsData } from './controllers/severControllers.js'
 
@@ -78,9 +78,6 @@ apiRouter.post('/users/sendemail', sendEmail);
 
 // 이메일 인증 확인 (POST /users/checkemail)
 apiRouter.post('/users/checkemail', checkEmail);
-
-// 유튜브 채널 이름으로 UID 획득 (POST /youtube/getchannelid)
-apiRouter.post('/youtube/getchannelid', getChannelIdByName);
 
 // 채널 데이터 요청
 apiRouter.get('/youtube/getchannelinfo', getChannelInfoData);

@@ -1,7 +1,7 @@
 //import { startDeleteUserData } from '../controllers/authControllers.js'
 // import { setRankData } from '../controllers/rankControllers.js'
 // import { google } from 'googleapis';
-import { setRankData } from "./controllers.js";
+import { updateLiveData } from "./controllers.js";
 import { getLatestVideoInfo } from "../controllers/youtubeControllers.js"
 
 // // YouTube API 인스턴스를 생성합니다.
@@ -43,4 +43,4 @@ import { getLatestVideoInfo } from "../controllers/youtubeControllers.js"
 
 // getChannelIdByName();
 
-setRankData();
+updateLiveData();
