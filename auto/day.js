@@ -1,6 +1,7 @@
-import { updateLatestVideoInfo, updateVideoData, startDeleteUserData, getTodayEvents } from './controllers.js';
+import { settingEvent, updateVideoData, updateLatestVideoInfo, startDeleteUserData } from './dayControllers.js';
 
-await getTodayEvents();
+// 이벤트 설정
+await settingEvent();
 
 // 채널의 영상들 업데이트
 await updateVideoData();

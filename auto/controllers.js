@@ -150,12 +150,14 @@ export async function updateLiveData() {
             promises.push((async () => {
                 // 채널의 이벤트 유무 가져오기
                 let multiplier = 1;
-                for (const event of eventDoc.events) {
-                    // 현재 채널이 이벤트 채널 목록에 포함되어 있는지 확인
-                    if (event.channel.includes(channelItem)) {
-                        if (multiplier < event.multiplier) {
-                            multiplier = event.multiplier;
-                            console.log(`Applying event: ${event.title} with multiplier ${event.multiplier}`);
+                if (eventDoc && eventDoc.ongoing) {
+                    for (const event of eventDoc.ongoing) {
+                        // 현재 채널이 이벤트 채널 목록에 포함되어 있는지 확인
+                        if (event.channel.includes(channelItem)) {
+                            if (multiplier < event.multiplier) {
+                                multiplier = event.multiplier;
+                                console.log(`Applying event: ${event.title} with multiplier ${event.multiplier}`);
+                            }
                         }
                     }
                 }
@@ -361,157 +363,8 @@ async function deleteDelistingStock(itemUid) {
 }
 
 
-export async function updateVideoData() {
-    try {
-        // 전체 비디오 데이터를 저장할 객체
-        const allVideoData = {};
 
-        // 각 채널에 대해 비디오 데이터 가져오기
-        const videoPromises = channelIdList.map(async (channelId) => {
-            try {
-                // 채널의 최신 10개 영상을 가져오기 위해 검색 API 호출
-                const searchResponse = await youtube.search.list({
-                    part: 'snippet',
-                    channelId: channelId,
-                    maxResults: 10,
-                    order: 'date',
-                    type: 'video'
-                });
 
-                const videoIds = searchResponse.data.items.map(item => item.id.videoId);
-
-                if (videoIds.length > 0) {
-                    // 가져온 videoIds를 사용하여 각 영상의 상세 정보를 가져옵니다.
-                    const videoResponse = await youtube.videos.list({
-                        part: 'snippet,statistics',
-                        id: videoIds.join(',')
-                    });
-
-                    const videoDataList = videoResponse.data.items.map((video) => ({
-                        videoUrl: `https://www.youtube.com/watch?v=${video.id}`,
-                        title: video.snippet.title,
-                        description: video.snippet.description,
-                        thumbnail: video.snippet.thumbnails?.medium?.url || '',
-                        publishedAt: video.snippet.publishedAt,
-                    }));
-
-                    // Firestore에 병렬로 저장
-                    const batch = db.batch();
-
-                    // 각 채널의 history에 비디오 데이터 저장
-                    const historyRef = db.collection('youtubevideos').doc(channelId).collection('history').doc(getDate());
-                    batch.set(historyRef, { videos: videoDataList });
-
-                    // 메인 데이터 위치인 'youtubevideos/0' 문서에 채널 데이터 업데이트
-                    const combinRef = db.collection('youtubevideos').doc('0');
-                    const combinDoc = await combinRef.get();
-
-                    // 문서가 없으면 초기 데이터를 설정
-                    if (!combinDoc.exists) {
-                        await combinRef.set({});
-                    }
-                    batch.set(combinRef, { [channelId]: videoDataList }, { merge: true });
-
-                    // Firestore 배치 실행
-                    await batch.commit();
-
-                    // allVideoData 객체에 채널 데이터를 추가
-                    allVideoData[channelId] = videoDataList;
-                }
-            } catch (err) {
-                console.error(`Error processing channel ${channelId}:`, err);
-            }
-        });
-
-        // 모든 채널의 영상 데이터를 병렬로 처리
-        await Promise.all(videoPromises);
-
-        // JSON 파일에 최신 비디오 데이터 저장
-        await updateJson('../json/videoList.json', allVideoData);
-
-        // 응답 전송
-        console.log('Latest 10 videos for each channel have been saved successfully.');
-        return;
-
-    } catch (error) {
-        console.error('Error saving latest videos:', error);
-        return;
-    }
-}
-
-export async function updateLatestVideoInfo() {
-    // 모든 채널의 최신 비디오 정보를 저장할 Map 객체 생성
-    const videoInfoMap = new Map();
-
-    const videoPromises = channelIdList.map(async (channelId) => {
-        try {
-            // 채널의 업로드된 영상 플레이리스트 ID 및 채널 이름 가져오기
-            const channelResponse = await youtube.channels.list({
-                part: 'contentDetails,snippet', // snippet 추가
-                id: channelId,
-            });
-
-            const channelDetails = channelResponse.data.items[0];
-            if (!channelDetails) {
-                console.warn(`No channel details found for channel ID: ${channelId}`);
-                return;
-            }
-
-            const playlistId = channelDetails.contentDetails.relatedPlaylists.uploads;
-            const channelName = channelDetails.snippet.title; // 채널 이름 가져오기
-
-            // 해당 플레이리스트에서 최신 영상 가져오기
-            const latestVideoResponse = await youtube.playlistItems.list({
-                part: 'snippet',
-                playlistId: playlistId,
-                maxResults: 1 // 가장 최신 1개의 영상만 가져오기
-            });
-
-            if (latestVideoResponse.data.items.length === 0) {
-                console.warn(`No videos found for channel ID: ${channelId}`);
-                return;
-            }
-
-            // 최신 비디오 정보 추출
-            const latestVideo = latestVideoResponse.data.items[0].snippet;
-            const videoId = latestVideoResponse.data.items[0].snippet.resourceId.videoId;
-            const videoData = {
-                channelName: channelName,
-                title: latestVideo.title,
-                thumbnail: latestVideo.thumbnails.medium.url,
-                publishedAt: latestVideo.publishedAt,
-                videoUrl: `https://www.youtube.com/watch?v=${videoId}`,
-            };
-
-            // Map 객체에 채널 ID를 키로 사용하여 데이터 추가
-            videoInfoMap.set(channelId, videoData);
-
-            //console.log(`Latest video for channel ${channelId} processed successfully:`, videoData);
-        } catch (err) {
-            console.error(`Error processing channel ${channelId}:`, err);
-        }
-    });
-
-    // 모든 비디오 정보 가져오기 작업이 완료될 때까지 대기
-    await Promise.all(videoPromises);
-
-    // Map 객체를 일반 객체로 변환하여 Firestore에 저장
-    const videoInfoObject = Object.fromEntries(videoInfoMap);
-
-    try {
-        await updateJson('../json/videoLatestList.json', videoInfoObject);
-        // Firestore에 데이터 저장 (일괄 저장)
-        await db.collection('youtubevideos').doc('0_latest').set(videoInfoObject);
-
-        console.log("All channel video information saved successfully.");
-        // 성공적으로 저장되었을 때 응답
-        return;
-
-    } catch (err) {
-        console.error("Error saving video information to Firestore:", err);
-        return;
-    }
-}
 
 // 랭킹 데이터 갱신
 export async function setRankData() {
@@ -604,137 +457,6 @@ function extractRankingData(snapshot) {
     return rankingData.reverse(); // 내림차순 가져온 데이터의 순서를 다시 정렬
 }
 
-export async function startDeleteUserData() {
-    try {
-        // 일주일 전의 날짜 계산
-        const date = new Date();
-        date.setDate(date.getDate() - 7);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const oneWeekAgoDate = `${year}-${month}-${day}`;
-
-        // 일주일 전의 'delete' 컬렉션의 문서를 참조
-        const userDocRef = db.collection('delete').doc(oneWeekAgoDate); // 일주일 전의 날짜 사용
-        const userDocSnap = await userDocRef.get();
-
-        // 문서가 존재하는지 확인
-        if (!userDocSnap.exists) {
-            console.log(`No delete data found for date: ${oneWeekAgoDate}`);
-            return;
-        }
-
-        // 문서에서 'uidlist'와 'nameList' 필드 값 가져오기
-        const uidList = userDocSnap.data().uidlist || [];
-        const nameList = userDocSnap.data().namelist || [];
-
-        // 'uidlist'가 있을 때만 처리
-        if (uidList.length > 0) {
-            // 각 uid에 대해 삭제 처리
-            for (const uid of uidList) {
-                try {
-
-                    await deleteStockCount(uid);
-                    // 'trade'와 'wallet' 컬렉션의 하위 문서 삭제
-                    await deleteSubcollection(db.collection('users').doc(uid).collection('trade'));
-                    await deleteSubcollection(db.collection('users').doc(uid).collection('wallet'));
-                    await deleteSubcollection(db.collection('users').doc(uid).collection('message'));
-                    await db.collection('users').doc(uid).delete();
-                    console.log(`User document and subcollections for UID: ${uid} deleted successfully.`);
-                } catch (error) {
-                    console.error(`Error deleting user document and subcollections for UID: ${uid}:`, error);
-                }
-            }
-        }
-
-        // 'nameList'가 있을 때만 처리
-        if (nameList.length > 0) {
-            // 각 name에 대해 삭제 처리
-            for (const name of nameList) {
-                try {
-                    const nameDocRef = db.collection('names').doc(name);
-                    await nameDocRef.delete();
-                    console.log(`Name document for name: ${name} deleted successfully.`);
-                } catch (error) {
-                    console.error(`Error deleting name document for name: ${name}:`, error);
-                }
-            }
-        }
-
-        // 'delete' 컬렉션의 해당 문서 삭제
-        await userDocRef.delete();
-        console.log(`Old delete data for date: ${oneWeekAgoDate} deleted successfully.`);
-    } catch (error) {
-        console.error(`Error deleting old user data for date ${oneWeekAgoDate}:`, error);
-    }
-}
-
-async function deleteStockCount(uid) {
-    try {
-        // Firestore에서 stock 문서 가져오기
-        const stockDocRef = db.collection('users').doc(uid).collection('wallet').doc('stock');
-        const stockDoc = await stockDocRef.get();
-
-        if (!stockDoc.exists) {
-            console.log('Stock document does not exist for user:', uid);
-            return; // 문서가 없으면 함수 종료
-        }
-
-        // 문서 데이터 가져오기
-        const stockData = stockDoc.data();
-
-        // stockCount > 0인 stockName 필터링
-        const positiveStocks = Object.entries(stockData)
-            .filter(([stockName, stockInfo]) => stockInfo.stockCount > 0) // stockCount 조건
-            .map(([stockName]) => stockName); // stockName만 추출
-
-        if (positiveStocks.length === 0) {
-            console.log(`No stocks to delete for user: ${uid}`);
-            return;
-        }
-
-        console.log(`Deleting stocks for user: ${uid}. Stocks:`, positiveStocks);
-
-        // 병렬 삭제 작업 처리
-        const deletePromises = positiveStocks.map((stockName) => {
-            return db.collection('youtubelivedata')
-                .doc('tradelist')
-                .collection(stockName)
-                .doc(uid)
-                .delete()
-                .then(() => console.log(`Deleted stock ${stockName} for user: ${uid}`))
-                .catch((err) => console.error(`Failed to delete stock ${stockName} for user: ${uid}`, err));
-        });
-
-        // 모든 삭제 작업 완료 대기
-        await Promise.all(deletePromises);
-
-        console.log(`All stocks deleted for user: ${uid}`);
-    } catch (error) {
-        console.error('Error deleting stock data:', error);
-    }
-}
-
-async function deleteSubcollection(collectionRef) {
-    try {
-        const snapshot = await collectionRef.get();
-
-        if (snapshot.empty) {
-            console.log(`No documents in subcollection: ${collectionRef.path}`);
-            return;
-        }
-
-        // 각 문서를 삭제
-        const deletePromises = snapshot.docs.map((doc) => doc.ref.delete());
-        await Promise.all(deletePromises);
-
-        console.log(`Subcollection ${collectionRef.path} deleted successfully.`);
-    } catch (error) {
-        console.error(`Error deleting subcollection ${collectionRef.path}:`, error);
-    }
-}
-
-
 export async function getPlayStoreVersion() {
     try {
         // 1. Google Play 인증
@@ -798,34 +520,5 @@ export async function getConfigConstant() {
         console.log(`JSON file saved at config_constant.json`);
     } catch (error) {
         console.error('Error exporting config to JSON:', error);
-    }
-}
-
-// 이벤트 데이터 구조 = 이벤트날짜, 적용 채널, 배율, 제목, 내용,
-
-export async function getTodayEvents() {
-    try {
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
-        const eventsRef = db.collection('config').doc('event').collection(today);
-
-        const snapshot = await eventsRef.get();
-
-        if (snapshot.empty) {
-            console.log('No events found for today.');
-            return [];
-        }
-
-        const events = [];
-        snapshot.forEach(doc => {
-            events.push({ id: doc.id, ...doc.data() });
-        });
-
-        console.log('Today’s events:', events);
-
-        const eventData = { date: today, events };
-        await updateJson(path.resolve(__dirname, '../json/event.json'), eventData);
-
-    } catch (error) {
-        console.error('Error fetching today’s events:', error);
     }
 }
