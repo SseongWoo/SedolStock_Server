@@ -1,7 +1,6 @@
 import { db, FieldValue } from '../firebase_admin.js';
 import { getTime } from '../utils/date.js'
 import { getJson } from '../utils/file.js'
-import { Config } from '../config.js';
 
 // 사용자 거래 데이터 최대 30일 까지만
 export async function getUserTradeDataList(req, res) {
@@ -32,6 +31,8 @@ export async function tryTrade(req, res) {
     const { uid } = req.params;
     const { itemuid, channeltype, itemcount, transactionprice, tradetype, priceavg } = req.body;
 
+    const configData = await getJson('../json/config_constant.json');
+
     const userLastTradeDocRef = db.collection('users').doc(uid).collection('trade').doc('0_last');
 
     const itemprice = await getPriceData(itemuid);
@@ -47,7 +48,7 @@ export async function tryTrade(req, res) {
         return res.status(403).json({ message: '무결성 오류: 현재의 아이템 가격과 요청된 아이템 가격이 다릅니다.' });
     }
 
-    const feeRate = tradetype === 'buy' ? Config.FEE_CONFIG.buyFeeRate : Config.FEE_CONFIG.sellFeeRate;
+    const feeRate = tradetype === 'buy' ? configData.feeratebuy : configData.feeratesell;
     const totalPrice = itemprice * itemcount;
     const fee = Math.round(totalPrice * feeRate);
     let totalcost = tradetype === 'buy' ? totalPrice + fee : totalPrice - fee;
