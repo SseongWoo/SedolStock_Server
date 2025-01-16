@@ -72,25 +72,31 @@ export async function setRankData() {
     }
 }
 
-// 유틸리티 함수: 스냅샷 데이터를 배열로 변환
 function extractRankingData(snapshot) {
     if (!snapshot.exists()) return []; // 데이터가 없을 경우 빈 배열 반환
 
     const rankingData = [];
-    let rank = 1; // 순위는 1부터 시작
+    const dataArray = []; // 데이터를 저장할 임시 배열
 
     snapshot.forEach(childSnapshot => {
         const data = childSnapshot.val();
-        rankingData.push({
+        dataArray.push({
             uid: childSnapshot.key,
-            rank: rank++, // 순위를 1씩 증가
             totalmoney: data.totalmoney,
             fandom: data.fandom,
             name: data.name,
         });
     });
 
-    return rankingData.reverse(); // 내림차순 가져온 데이터의 순서를 다시 정렬
+    // 내림차순으로 정렬된 배열을 사용하여 rank 추가
+    dataArray.reverse().forEach((data, index) => {
+        rankingData.push({
+            ...data,
+            rank: index + 1, // 순위를 1부터 시작
+        });
+    });
+
+    return rankingData; // 정렬된 데이터를 반환
 }
 
 // 설정파일을 파이어베이스에서 가져옴

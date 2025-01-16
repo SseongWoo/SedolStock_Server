@@ -49,12 +49,12 @@ export async function getChannelIdByName(channelName) {
 
 export async function setEvent() {
     const newEvent = {
-        eventstart: "2025-01-15",
-        eventend: "2025-01-20",
-        channel: ["UCZOcwheypMvYN_J2oRBgt2A"],
+        eventstart: "2025-01-16",
+        eventend: "2025-01-16",
+        channel: ["UCZOcwheypMvYN_J2oRBgt2A", "UCzh4yY8rl38knH33XpNqXbQ"],
         multiplier: 2,
-        title: "왁타버스 제로 복귀 기념 2배 이벤트",
-        description: "왁타버스 제로 채널이 돌아온 기념"
+        title: "왁타버스 2배 이벤트",
+        description: "왁타버스 상승량 2배"
     };
 
     // 진행 중인 이벤트에 추가

@@ -1,2 +1,2 @@
-import { getChannelIdByName } from "./manualControllers.js"
-await getChannelIdByName('왁타버스 WAKTAVERSE');
+import { setEvent } from "./manualControllers.js"
+await setEvent();

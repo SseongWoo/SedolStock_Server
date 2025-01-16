@@ -1,4 +1,3 @@
-import { settingEvent, } from './dayControllers.js';
+import { setRankData } from "./hourControllers.js";
 
-// 이벤트 설정
-await settingEvent();
+await setRankData();
