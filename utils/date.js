@@ -36,6 +36,17 @@ export function getDate() {
     return `${year}-${month}-${day}`;
 }
 
+export function getDayDate() {
+    const now = new Date();
+    now.setDate(now.getDate() + 1); // 오늘 날짜에 1일 추가
+
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // 두 자리로 포맷
+    const day = String(now.getDate()).padStart(2, '0'); // 두 자리로 포맷
+
+    return `${year}-${month}-${day}`;
+}
+
 export function getDayName() {
     const daysOfWeek = ["일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일"];
 

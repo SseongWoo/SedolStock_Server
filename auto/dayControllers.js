@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import { google } from 'googleapis';
 import { db, realtimeDB } from '../firebase_admin.js';
-import { getDate, } from '../utils/date.js';
+import { getDayDate, } from '../utils/date.js';
 import { updateJson, getJson } from '../utils/file.js'
 
 const apiKey = process.env.YOUTUBE_API_KEY;
@@ -63,7 +63,7 @@ export async function updateVideoData() {
                     const batch = db.batch();
 
                     // 각 채널의 history에 비디오 데이터 저장
-                    const historyRef = db.collection('youtubevideos').doc(channelId).collection('history').doc(getDate());
+                    const historyRef = db.collection('youtubevideos').doc(channelId).collection('history').doc(getDayDate());
                     batch.set(historyRef, { videos: videoDataList });
 
                     // 메인 데이터 위치인 'youtubevideos/0' 문서에 채널 데이터 업데이트
@@ -181,10 +181,10 @@ export async function startDeleteUserData() {
     try {
         // 일주일 전의 날짜 계산
         const date = new Date();
-        date.setDate(date.getDate() - 7);
+        date.setDate(date.getDayDate() - 7);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        const day = String(date.getDayDate()).padStart(2, '0');
         const oneWeekAgoDate = `${year}-${month}-${day}`;
 
         // 일주일 전의 'delete' 컬렉션의 문서를 참조
@@ -309,7 +309,9 @@ async function deleteSubcollection(collectionRef) {
 
 export async function settingEvent() {
     try {
-        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD 형식
+        const date = new Date();
+        date.setDate(date.getDate() + 1); // 오늘 날짜에 1일 추가
+        const today = today.toISOString().split('T')[0];
         const ongoingRef = db.collection('config').doc('event').collection('ongoing');      // 진행중인 이벤트
         const upcomingRef = db.collection('config').doc('event').collection('upcoming');     // 예정된 이벤트
         const completedRef = db.collection('config').doc('event').collection('completed');   // 완료된 이벤트
