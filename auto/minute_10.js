@@ -1,3 +1,3 @@
-import { getPlayStoreVersion } from "./controllers.js";
+import { getPlayStoreVersion } from "./minuteControllers.js";
 
 getPlayStoreVersion();

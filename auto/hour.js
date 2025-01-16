@@ -1,4 +1,4 @@
-import { setRankData, getConfigConstant } from "./controllers.js";
+import { setRankData, getConfigConstant } from "./hourControllers.js";
 
 await setRankData();
 
