@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 import { google } from 'googleapis';
 import { db, realtimeDB } from '../firebase_admin.js';
-import { getDayDate, } from '../utils/date.js';
+import { getDayName, } from '../utils/date.js';
 import { updateJson, getJson } from '../utils/file.js'
 
 const apiKey = process.env.YOUTUBE_API_KEY;
@@ -63,7 +63,7 @@ export async function updateVideoData() {
                     const batch = db.batch();
 
                     // 각 채널의 history에 비디오 데이터 저장
-                    const historyRef = db.collection('youtubevideos').doc(channelId).collection('history').doc(getDayDate());
+                    const historyRef = db.collection('youtubevideos').doc(channelId).collection('history').doc(getDayName());
                     batch.set(historyRef, { videos: videoDataList });
 
                     // 메인 데이터 위치인 'youtubevideos/0' 문서에 채널 데이터 업데이트
@@ -113,7 +113,7 @@ export async function updateLatestVideoInfo() {
             const channelResponse = await youtube.channels.list({
                 part: 'contentDetails,snippet', // snippet 추가
                 id: channelId,
-            });
+            })
 
             const channelDetails = channelResponse.data.items[0];
             if (!channelDetails) {
