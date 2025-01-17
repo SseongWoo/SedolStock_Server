@@ -108,7 +108,7 @@ export async function updateLiveData() {
                 aggregateStatistics(response.data.items, countMap[channelItem]);
 
                 // 차이 및 가격 업데이트
-                updatePriceDifferences(countMap[channelItem], channelItem, configDoc, multiplier, firstprice);
+                updatePriceDifferences(countMap[channelItem], channelItem, configDoc, multiplier, configDoc.firstprice);
                 updateChartDataList(chartDataList, channelItem, countMap[channelItem]);
             })().catch(error => console.error(`Error fetching data for channel ${channelItem}:`, error)));
         }
