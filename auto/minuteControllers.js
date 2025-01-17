@@ -161,7 +161,7 @@ function updatePriceDifferences(countData, channelItem, configDoc, multiplier) {
     const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
     const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
     const diffSum = viewDiff + likeDiff;
-    const lowerLimit = countData.lastPrice !== 0
+    const lowerLimit = countData.lastPrice !== 0 || countData.lastPrice >= 20000
         ? Math.max(Math.round(countData.lastPrice * configDoc.limitpersentlower / 100), 100)
         : 0;
 
