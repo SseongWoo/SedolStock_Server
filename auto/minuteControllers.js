@@ -108,7 +108,7 @@ export async function updateLiveData() {
                 aggregateStatistics(response.data.items, countMap[channelItem]);
 
                 // 차이 및 가격 업데이트
-                updatePriceDifferences(countMap[channelItem], channelItem, configDoc, multiplier);
+                updatePriceDifferences(countMap[channelItem], channelItem, configDoc, multiplier, firstprice);
                 updateChartDataList(chartDataList, channelItem, countMap[channelItem]);
             })().catch(error => console.error(`Error fetching data for channel ${channelItem}:`, error)));
         }
@@ -157,7 +157,7 @@ function aggregateStatistics(items, countData) {
 }
 
 // 유틸 함수: 가격 업데이트
-function updatePriceDifferences(countData, channelItem, configDoc, multiplier) {
+function updatePriceDifferences(countData, channelItem, configDoc, multiplier, firstPrice) {
     const viewDiff = countData.totalViewCount - countData.lastTotalViewCount;
     const likeDiff = countData.totalLikeCount - countData.lastTotalLikeCount;
     const diffSum = viewDiff + likeDiff;
@@ -190,7 +190,7 @@ function updatePriceDifferences(countData, channelItem, configDoc, multiplier) {
         countData.delisting--;
 
         if (countData.delisting <= 0) {
-            countData.price = countData.firstprice;
+            countData.price = firstPrice;
         }
     } else {
         if (multiplier > 1 && diffValue > 0) {
