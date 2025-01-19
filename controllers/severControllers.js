@@ -30,3 +30,26 @@ export async function getEventData(req, res) {
         res.status(500).json({ message: "Failed to fetch event data", error: error.message });
     }
 }
+
+export async function createEventData(req, res) {
+    const { title, description, eventstart, eventend, multiplier, channel } = req.body;
+    try {
+        const newEvent = {
+            eventstart,
+            eventend,
+            channel,
+            multiplier,
+            title,
+            description,
+        };
+
+        // 진행 중인 이벤트에 추가
+        await db.collection('config').doc('event').collection('upcoming').add(newEvent);
+
+        res.status(200).send({ message: 'Success get EventData', data: eventDoc });
+    } catch (error) {
+        console.error("Error getConstantsData:", error);
+        // 에러 발생 시 500 응답
+        res.status(500).json({ message: "Failed to fetch event data", error: error.message });
+    }
+}

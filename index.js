@@ -5,7 +5,7 @@ import { getUserData, signUpUserData1, signUpUserData2, searchName, updateName, 
 import { getUserTradeDataList, tryTrade } from './controllers/tradeControllers.js';
 import { getChannelInfoData, getVideoData, getLiveData, getLatestVideoInfo } from './controllers/youtubeControllers.js';
 import { getRankData } from './controllers/rankControllers.js'
-import { checkRunningServer, getConstantsData, getEventData } from './controllers/severControllers.js'
+import { checkRunningServer, getConstantsData, getEventData, createEventData } from './controllers/severControllers.js'
 
 // Express 애플리케이션 초기화
 const app = express();
@@ -120,6 +120,9 @@ apiRouter.get('/config', getConstantsData);
 
 // 이벤트값 요청
 apiRouter.get('/event', getEventData);
+
+// 이벤트값 요청
+apiRouter.post('/event', createEventData);
 
 
 // 서버 실행
