@@ -46,9 +46,9 @@ export async function createEventData(req, res) {
         // 진행 중인 이벤트에 추가
         await db.collection('config').doc('event').collection('upcoming').add(newEvent);
 
-        res.status(200).send({ message: 'Success get EventData', data: eventDoc });
+        res.status(200).send({ message: 'Success get EventData' });
     } catch (error) {
-        console.error("Error getConstantsData:", error);
+        console.error("Error createEventData:", error);
         // 에러 발생 시 500 응답
         res.status(500).json({ message: "Failed to fetch event data", error: error.message });
     }
